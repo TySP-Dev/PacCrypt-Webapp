@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PacCrypt</title>
+  <!-- Favicon Link -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body class="dark">
+  <header>
+    <h1>PacCrypt</h1>
+    <p>Secure Encoding, Encryption and Password Generation</p>
+  </header>
+
+  <main>
+    <section id="password-section" class="card">
+      <h2>Password Generator</h2>
+      <div class="form-group">
+        <input
+          type="text"
+          id="password-field"
+          placeholder="Generated password will appear here"
+          readonly
+        />
+        <div class="button-group">
+          <button type="button" onclick="generateRandomPassword()">Generate</button>
+          <button type="button" onclick="copyToClipboard('password-field', 'password-toast')">Copy</button>
+        </div>
+        <div id="password-toast" class="toast">Copied to Clipboard!</div>
+      </div>
+    </section>
+
+    <section id="pacman-section" class="card" style="display: none;">
+      <div class="pacman-wrapper">
+        <canvas id="pacmanCanvas" width="800" height="600"></canvas>
+      </div>
+      <audio id="chomp-sound" src="{{ url_for('static', filename='audio/chomp.mp3') }}"></audio>
+      <div class="button-group">
+        <button type="button" onclick="resetGame()">Restart Game</button>
+        <button type="button" onclick="exitGame()">Exit Game</button>
+      </div>
+    </section>
+
+    <section id="encoding-section" class="card">
+      <h2>Text Encoder / Decoder & File Encryption</h2>
+      <form id="main-form" class="form-group" method="POST" onsubmit="handleSubmit(event)">
+        <label for="encryption-type">Select Encryption Type:</label>
+        <select id="encryption-type" name="encryption-type" onchange="toggleEncryptionOptions()">
+          <option value="basic">Basic (Less Secure)</option>
+          <option value="advanced" selected>Advanced (More Secure)</option>
+        </select>
+
+        <div id="encryption-options" class="radio-group">
+          <label class="radio-button">
+            <input type="radio" name="operation" value="encrypt" id="encrypt-radio" checked />
+            <span id="encrypt-label">Encrypt</span>
+          </label>
+          <label class="radio-button">
+            <input type="radio" name="operation" value="decrypt" id="decrypt-radio" />
+            <span id="decrypt-label">Decrypt</span>
+          </label>
+        </div>
+
+        <div id="text-section" class="form-group">
+          <textarea
+            id="input-text"
+            name="message"
+            placeholder="Enter text here..."
+            oninput="toggleInputMode()"
+          ></textarea>
+          <div id="password-input">
+            <input type="password" id="password" name="password" placeholder="Enter Password" />
+          </div>
+        </div>
+
+        <div id="file-section" class="form-group" style="display: none;">
+          <input type="file" id="file-input" onchange="toggleInputMode()" />
+          <button type="button" id="remove-file-btn" onclick="removeFile()">Remove File</button>
+        </div>
+
+        <div id="file-password-input" style="display: none;">
+          <input type="password" id="file-password" name="file-password" placeholder="Enter Password for File" />
+        </div>
+
+        <button type="button" class="submit-button" onclick="handleSubmit(event)">Submit</button>
+      </form>
+
+      <div style="height: 20px;"></div>
+
+      <textarea id="output-text" readonly placeholder="Result will appear here">{{ result }}</textarea>
+      <div class="button-group">
+        <button type="button" onclick="copyToClipboard('output-text', 'output-toast')">Copy Output</button>
+        <button type="button" onclick="clearAll()">Clear All</button>
+      </div>
+      <div id="output-toast" class="toast">Copied to Clipboard!</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+    <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+      <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2020%2F11%2FGitHub-Logo.png&f=1&nofb=1&ipt=b9d67651e313b2cdbeae8a7ec9320dadb278a21a2e7217810b839c233c04f265"
+           alt="GitHub Logo" width="100" />
+    </a>
+  </footer>
+</body>
+</html>
