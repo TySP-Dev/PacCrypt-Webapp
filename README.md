@@ -16,11 +16,11 @@
 ### Prerequisites
 
 - **Python 3.7+**
-- **Nginx** (for reverse proxy and SSL configuration)
+- **Nginx** (for reverse proxy and SSL configuration for hosting)
 
 Official PacCrypt website: paccrypt.unnaturalll.dev
 
-### Steps to Set Up Locally (Windows)
+### Steps to Set Up Locally:
 
 1. Clone the repository:
    git clone https://github.com/TySP-Dev/PacCrypt.git
@@ -42,33 +42,39 @@ Official PacCrypt website: paccrypt.unnaturalll.dev
 
 ### Encryption and Decryption
 
-Select the encryption type (Basic or Advanced).
+#### For text encryption/decryption:
 
-For text encryption/decryption:
+-- Select the encryption type (Basic or Advanced).
 
-Enter text in the Input Text area.
+-- Choose whether to Encrypt or Decrypt.
 
-Choose whether to Encrypt or Decrypt.
+-- Enter text in the Input Text area.
 
-Enter a password (if using advanced encryption).
+-- Enter a password (if using advanced encryption).
 
-For file encryption/decryption:
+-- Click submit.
 
-Upload a file.
+#### For file encryption/decryption:
 
-Enter a password for encryption/decryption.
+-- Select encryption type **Advanced.**
 
-Click Encrypt or Decrypt.
+-- Choose whether to Encrypt or Decrypt.
 
-### Password Generation
+-- Upload a file.
+
+-- Enter a password for encryption/decryption.
+
+-- Click submit.
+
+### Password Generation:
 
 Click the Generate button to create a random password, then use the Copy button to copy it to your clipboard.
 
-### Pac-Man Game (Easter Egg)
+### Pac-Man Game (Easter Egg):
 
 Type the word "pacman" in the input box to unlock the Pac-Man game!
 
-### Contributing
+### Contributing:
 
 Feel free to open an issue or submit a pull request for improvements, bug fixes, or new features!
 
