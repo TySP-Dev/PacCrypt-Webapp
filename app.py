@@ -1,15 +1,17 @@
+## DEV DEV DEV
+
+import os
 from flask import Flask, render_template, request, jsonify
 import html
-import os
 import base64
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from waitress import serve
 
 app = Flask(__name__)
 
-# Basic Encoder/Decoder
+# ====== Your App Code ======
+
 ALPHABET = list('abcdefghijklmnopqrstuvwxyz')
 
 def simple_encode(text: str) -> str:
@@ -24,7 +26,6 @@ def simple_decode(text: str) -> str:
         for c in text.lower()
     )
 
-# Advanced Encrypt/Decrypt using AES-GCM
 def derive_key(password: str, salt: bytes) -> bytes:
     kdf = PBKDF2HMAC(
         algorithm=SHA256(),
@@ -56,7 +57,6 @@ def advanced_decrypt(token_b64: str, password: str) -> str:
     except Exception:
         return "[Error] Invalid password or corrupted data!"
 
-# Combined Route for Page & AJAX
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == 'POST':
@@ -83,6 +83,30 @@ def index():
         encryption_type="advanced"
     )
 
+# ====== Smart Server Startup ======
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
+
 if __name__ == "__main__":
-    # Use Waitress to serve the app in production
-    serve(app, host="0.0.0.0", port=5000)
+    PRODUCTION = os.getenv("PRODUCTION", "false").lower() == "true"
+
+    if PRODUCTION:
+        from waitress import serve
+        print("[INFO] Running in PRODUCTION mode with Waitress.")
+        serve(app, host="0.0.0.0", port=5000)
+    else:
+        print("[INFO] Running in DEVELOPMENT mode with Flask server.")
+        app.run(debug=True, host="0.0.0.0", port=5000)
+
+
+## DEV DEV DEV

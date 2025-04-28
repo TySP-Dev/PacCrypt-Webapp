@@ -1,41 +1,31 @@
-// ===== AES Encryption =====
+// ===== AES Advanced Encryption =====
 async function encryptAdvanced(message, password) {
-  // Create a random salt for key derivation
   const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  // Derive a key from the password using PBKDF2 and the salt
   const key = await deriveKey(password, salt);
-
-  // Create a random initialization vector (IV)
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
-  // Encode the message as a Uint8Array
   const encoder = new TextEncoder();
   const encodedMessage = encoder.encode(message);
 
-  // Encrypt the message using AES-GCM
   const encryptedMessage = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv: iv },
     key,
     encodedMessage
   );
 
-  // Combine salt, IV, and encrypted message
   const encryptedArray = new Uint8Array(salt.length + iv.length + encryptedMessage.byteLength);
   encryptedArray.set(salt);
   encryptedArray.set(iv, salt.length);
   encryptedArray.set(new Uint8Array(encryptedMessage), salt.length + iv.length);
 
-  // Convert the result to base64 to send to the server
-  return btoa(String.fromCharCode.apply(null, encryptedArray));
+  return btoa(String.fromCharCode(...encryptedArray));
 }
 
-// Derive a key from the password using PBKDF2
 async function deriveKey(password, salt) {
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
 
-  const key = await crypto.subtle.importKey(
+  const keyMaterial = await crypto.subtle.importKey(
     'raw',
     passwordBuffer,
     { name: 'PBKDF2' },
@@ -47,37 +37,31 @@ async function deriveKey(password, salt) {
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
+      iterations: 200000,
       hash: 'SHA-256',
     },
-    key,
+    keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt']
   );
 }
 
-// ===== AES Decryption =====
 async function decryptAdvanced(encryptedData, password) {
-  // Decode the base64-encoded encrypted data
-  const encryptedArray = new Uint8Array(atob(encryptedData).split("").map(char => char.charCodeAt(0)));
+  const encryptedArray = new Uint8Array(atob(encryptedData).split("").map(c => c.charCodeAt(0)));
 
-  // Extract salt, IV, and encrypted message from the encrypted data
   const salt = encryptedArray.slice(0, 16);
   const iv = encryptedArray.slice(16, 28);
   const encryptedMessage = encryptedArray.slice(28);
 
-  // Derive the key from the password and salt
   const key = await deriveKey(password, salt);
 
-  // Decrypt the message using AES-GCM
   const decryptedMessage = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: iv },
     key,
     encryptedMessage
   );
 
-  // Decode the decrypted message to text
   const decoder = new TextDecoder();
   return decoder.decode(decryptedMessage);
 }
@@ -85,81 +69,54 @@ async function decryptAdvanced(encryptedData, password) {
 // ===== UI Toggles =====
 function toggleEncryptionOptions() {
   const type = document.getElementById("encryption-type").value;
-  const pwdContainer = document.getElementById("password-input");
-  pwdContainer.style.display = (type === 'advanced') ? 'flex' : 'none';
+  document.getElementById("password-input").style.display = (type === 'advanced') ? 'flex' : 'none';
+
   if (type === 'basic') removeFile();
+
   toggleInputMode();
-  document.getElementById("encrypt-label").textContent =
-    (type === 'basic') ? "Encode" : "Encrypt";
-  document.getElementById("decrypt-label").textContent =
-    (type === 'basic') ? "Decode" : "Decrypt";
+  document.getElementById("encrypt-label").textContent = (type === 'basic') ? "Encode" : "Encrypt";
+  document.getElementById("decrypt-label").textContent = (type === 'basic') ? "Decode" : "Decrypt";
 }
 
-// ===== Remove File Button =====
 function removeFile() {
-  document.getElementById("file-input").value = ""; // Clear the file input
-  document.getElementById("remove-file-btn").style.display = 'none'; // Hide the remove file button
-  toggleInputMode(); // Reapply the input mode logic
-  document.getElementById("file-password-input").style.display = 'none'; // Hide the file password input
+  document.getElementById("file-input").value = "";
+  document.getElementById("remove-file-btn").style.display = 'none';
+  toggleInputMode();
 }
 
-// ===== Input vs. File Toggle =====
 function toggleInputMode() {
   const textValue = document.getElementById("input-text").value.trim();
   const fileSelected = document.getElementById("file-input").files.length > 0;
   const isAdvanced = document.getElementById("encryption-type").value === 'advanced';
 
-  // Show/hide text area based on file selection
-  document.getElementById("text-section").style.display =
-    fileSelected ? 'none' : 'flex';
+  document.getElementById("text-section").style.display = fileSelected ? 'none' : 'flex';
+  document.getElementById("file-section").style.display = (isAdvanced && !textValue) ? 'flex' : 'none';
+  document.getElementById("remove-file-btn").style.display = fileSelected ? 'inline-block' : 'none';
 
-  // Show/hide file input section when in advanced mode and no text input is given
-  document.getElementById("file-section").style.display =
-    (isAdvanced && !textValue) ? 'flex' : 'none';
-
-  // Show/hide the remove file button
-  document.getElementById("remove-file-btn").style.display =
-    fileSelected ? 'inline-block' : 'none';
-
-  // ALWAYS show the password input in advanced mode
   if (isAdvanced) {
     document.getElementById("password-input").style.display = 'flex';
-  } else {
-    document.getElementById("password-input").style.display = 'none';
-  }
-
-  // Show the dedicated password input for file encryption if a file is selected
-  if (fileSelected) {
-    document.getElementById("file-password-input").style.display = 'flex';  // Show password input for files
-  } else {
-    document.getElementById("file-password-input").style.display = 'none';  // Hide when no file is selected
   }
 }
 
-// ===== Validate and Submit Form =====
+// ===== Form Submission =====
 async function handleSubmit(event) {
   event.preventDefault();
 
-  // If the encryption type is advanced, ensure password is provided
   const password = document.getElementById("password").value;
-  const filePassword = document.getElementById("file-password") ? document.getElementById("file-password").value : '';
   const encryptionType = document.getElementById("encryption-type").value;
 
-  if (encryptionType === 'advanced' && !password && !filePassword) {
+  if (encryptionType === 'advanced' && !password) {
     alert("Password is required for advanced encryption.");
     return;
   }
 
-  // Prepare the form data
   const payload = {
     "encryption-type": encryptionType,
     operation: document.querySelector('input[name="operation"]:checked').value,
     message: document.getElementById("input-text").value,
-    password: password,
-    "file-password": filePassword
+    password: password
   };
 
-  // Handle file upload encryption/decryption
   const fileInput = document.getElementById("file-input");
   if (fileInput.files.length > 0) {
     const op = document.querySelector('input[name="operation"]:checked').value;
@@ -168,7 +125,6 @@ async function handleSubmit(event) {
     return;
   }
 
-  // Handle text encryption/decryption
   try {
     const resp = await fetch("/", {
       method: "POST",
@@ -185,30 +141,35 @@ async function handleSubmit(event) {
 // ===== File Encryption / Decryption =====
 function encryptFile() {
   const f = document.getElementById("file-input");
-  const pwd = document.getElementById("file-password").value;
+  const pwd = document.getElementById("password").value;
   if (!pwd) return alert("Please enter a password!");
   if (!f.files.length) return alert("Please select a file!");
+
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const raw = e.target.result;
-    let encryptedMessage = await encryptAdvanced(raw, pwd);
-    downloadFile(encryptedMessage, f.files[0].name + ".enc");
+    const raw = new Uint8Array(e.target.result);
+    const base64Raw = btoa(String.fromCharCode(...raw));
+    const encrypted = await encryptAdvanced(base64Raw, pwd);
+    downloadFile(encrypted, f.files[0].name + ".enc");
   };
-  reader.readAsText(f.files[0]);
+  reader.readAsArrayBuffer(f.files[0]);
 }
 
 function decryptFile() {
   const f = document.getElementById("file-input");
-  const pwd = document.getElementById("file-password").value;
+  const pwd = document.getElementById("password").value;
   if (!pwd) return alert("Please enter a password!");
   if (!f.files.length) return alert("Please select a file!");
+
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const enc = e.target.result;
-      const decryptedMessage = await decryptAdvanced(enc, pwd);
-      downloadFile(decryptedMessage, f.files[0].name.replace(/\.enc$/, ''));
-    } catch {
+      const encryptedText = e.target.result;
+      const decryptedBase64 = await decryptAdvanced(encryptedText, pwd);
+      const byteString = atob(decryptedBase64);
+      const byteArray = new Uint8Array([...byteString].map(c => c.charCodeAt(0)));
+      downloadFileBinary(byteArray, f.files[0].name.replace(/\.enc$/, ''));
+    } catch (err) {
       alert("Decryption failed: wrong password or corrupted file.");
     }
   };
@@ -217,6 +178,16 @@ function decryptFile() {
 
 function downloadFile(content, filename) {
   const blob = new Blob([content], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadFileBinary(byteArray, filename) {
+  const blob = new Blob([byteArray], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -240,13 +211,12 @@ function generateRandomPassword() {
 function copyToClipboard(elementId, toastId) {
   const copyText = document.getElementById(elementId);
   copyText.select();
-  copyText.setSelectionRange(0, 99999); // For mobile devices
+  copyText.setSelectionRange(0, 99999);
   document.execCommand("copy");
 
-  // Show toast notification
   const toast = document.getElementById(toastId);
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2000); // Remove toast after 2 seconds
+  setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
 // ===== Pacman Easter Egg =====
@@ -276,6 +246,28 @@ function resetGame() {
   stopPacman();
   startPacman();
 }
+
+// ===== Clear All =====
+function clearAll() {
+  document.getElementById("input-text").value = "";
+  document.getElementById("output-text").value = "";
+  document.getElementById("file-input").value = "";
+  document.getElementById("password").value = "";
+
+  document.getElementById("pacman-section").style.display = "none";
+  document.getElementById("encoding-section").style.display = "block";
+
+  removeFile();
+  toggleInputMode();
+}
+
+// ===== Initialize =====
+document.addEventListener("DOMContentLoaded", () => {
+  toggleEncryptionOptions();
+  toggleInputMode();
+  document.getElementById("input-text").addEventListener("input", checkForPacman);
+});
+
 
 // ===== Pacman Game Variables & Logic =====
 let canvas, ctx, pacman, enemy, walls, dots, score;
@@ -441,18 +433,27 @@ function drawChar(ch,color) {
 }
 
 function eatDots() {
-  dots = dots.filter(d=>{
-    const dx = d.c*cellSize+cellSize/2, dy = d.r*cellSize+cellSize/2;
-    if (Math.abs(pacman.x-dx)<pacman.size && Math.abs(pacman.y-dy)<pacman.size) {
+  const chompSound = document.getElementById("chomp-sound");
+
+  dots = dots.filter(d => {
+    const dx = d.c * cellSize + cellSize / 2;
+    const dy = d.r * cellSize + cellSize / 2;
+    if (Math.abs(pacman.x - dx) < pacman.size && Math.abs(pacman.y - dy) < pacman.size) {
       score++;
-      return false;
+      if (chompSound) {
+        chompSound.currentTime = 0;  // Reset sound
+        chompSound.volume = 0.4;
+        chompSound.play();
+      }
+      return false; // Remove dot
     }
     return true;
   });
-  ctx.fillStyle="white";
-  dots.forEach(d=>{
+
+  ctx.fillStyle = "white";
+  dots.forEach(d => {
     ctx.beginPath();
-    ctx.arc(d.c*cellSize+cellSize/2, d.r*cellSize+cellSize/2, dotSize,0,Math.PI*2);
+    ctx.arc(d.c * cellSize + cellSize / 2, d.r * cellSize + cellSize / 2, dotSize, 0, Math.PI * 2);
     ctx.fill();
   });
 }
@@ -472,25 +473,3 @@ function checkGameOver() {
     clearInterval(gameInterval);
   }
 }
-
-// ===== Clear All Functionality =====
-function clearAll() {
-  document.getElementById("input-text").value = "";
-  document.getElementById("output-text").value = "";
-  document.getElementById("file-input").value = "";
-  document.getElementById("password").value = "";
-  document.getElementById("file-password").value = "";
-
-  document.getElementById("pacman-section").style.display = "none";
-  document.getElementById("encoding-section").style.display = "block";
-
-  removeFile();
-  toggleInputMode();
-}
-
-// ===== Initialize =====
-document.addEventListener("DOMContentLoaded", () => {
-  toggleEncryptionOptions();
-  toggleInputMode();
-  document.getElementById("input-text").addEventListener("input", checkForPacman);
-});

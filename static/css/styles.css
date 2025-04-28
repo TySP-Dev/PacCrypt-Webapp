@@ -9,23 +9,25 @@
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #121212;
-    color: #f0f0f0;
+    color: #00ff99;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    justify-content: center; /* Vertically center content */
-    align-items: center; /* Horizontally center content */
+    justify-content: center;
+    align-items: center;
     padding: 20px;
 }
 
 /* ===== Header ===== */
 header {
     text-align: center;
-    padding: 30px 20px;
+    padding: 25px;
     background-color: #1c1c1c;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
     width: 100%;
     max-width: 800px;
+    margin-bottom: 30px;
 }
 
     header h1 {
@@ -35,7 +37,7 @@ header {
     }
 
     header p {
-        font-size: 1.1em;
+        font-size: 1.2em;
         color: #00ff99;
     }
 
@@ -49,13 +51,12 @@ main {
     max-width: 800px;
     padding: 20px;
     gap: 30px;
-    justify-content: center;
 }
 
 /* ===== Section Card Styling ===== */
 .card {
     background-color: #1e1e1e;
-    padding: 20px 25px;
+    padding: 25px;
     width: 100%;
     max-width: 800px;
     border-radius: 12px;
@@ -68,7 +69,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
     width: 100%;
 }
 
@@ -92,7 +93,8 @@ textarea {
     resize: none;
 }
 
-input[type="password"] {
+input[type="password"],
+#password {
     min-height: 50px;
 }
 
@@ -123,7 +125,7 @@ select:focus {
     box-shadow: 0 0 8px rgba(0, 255, 153, 0.8);
 }
 
-/* ===== Match input and output textarea sizes ===== */
+/* ===== Match input and output sizes ===== */
 #input-text,
 #output-text {
     width: 80%;
@@ -138,8 +140,8 @@ select:focus {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 15px;
+    margin-top: 15px;
     width: 100%;
 }
 
@@ -152,8 +154,8 @@ button {
     font-size: 1em;
     cursor: pointer;
     transition: 0.3s;
-    width: 100%; /* Makes buttons stretch to fill container */
-    max-width: 200px; /* Restricts button width */
+    width: 100%;
+    max-width: 200px;
 }
 
     button:hover {
@@ -161,7 +163,7 @@ button {
         color: #121212;
     }
 
-/* ===== Toggle Buttons ===== */
+/* ===== Toggle Buttons (Encode/Decode, Encrypt/Decrypt) ===== */
 .radio-group {
     display: flex;
     justify-content: center;
@@ -174,13 +176,15 @@ button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 18px;
+    padding: 1px 1px;
     border: 2px solid #00ff99;
     border-radius: 8px;
     background-color: #2c2f33;
     color: #00ff99;
     cursor: pointer;
     transition: 0.3s;
+    position: relative;
+    box-shadow: none;
 }
 
     .radio-button:hover {
@@ -188,21 +192,27 @@ button {
         color: #121212;
     }
 
+    /* Hide the actual radio input */
     .radio-button input {
         display: none;
     }
 
+        /* When selected, make the ENTIRE BUTTON glow */
         .radio-button input:checked + span {
-            background-color: #00ff99;
-            color: #121212;
-            padding: 8px 18px;
+            background-color: #2c2f33;
+            color: #00ff99;
+            box-shadow: 0 0 15px rgba(0, 255, 153, 0.7);
             border-radius: 8px;
-            display: inline-block;
+            padding: 8px 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
+
 
 /* ===== Remove File Button ===== */
 #remove-file-btn {
-    display: none; /* only shows when a file is selected */
+    display: none;
     margin-top: 8px;
     padding: 8px 16px;
     border: 2px solid #ff5555;
@@ -221,14 +231,19 @@ button {
 /* ===== Toast Notifications ===== */
 .toast {
     visibility: hidden;
-    min-width: 250px;
+    width: 80%;
+    max-width: 500px;
+    min-height: 50px;
     background-color: #333;
     color: #00ff99;
     text-align: center;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 8px;
-    font-size: 0.9em;
+    border-radius: 8px;
+    padding: 14px;
+    margin: 10px auto 0 auto;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
@@ -274,11 +289,14 @@ button {
 /* ===== Footer ===== */
 footer {
     text-align: center;
-    padding: 18px;
+    padding: 25px;
     background-color: #1c1c1c;
     color: #00ff99;
-    margin-top: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    margin-top: 30px;
     width: 100%;
+    max-width: 800px;
 }
 
     footer a {
@@ -290,22 +308,17 @@ footer {
             color: #ff0066;
         }
 
-/* ===== Password Input Field ===== */
-#password-input {
-    display: flex; /* Password input is visible by default */
-    margin-top: 15px;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    max-width: 500px;
-}
-
-    #password-input input {
-        padding: 12px;
-        font-size: 1em;
-        border: 2px solid #00ff99;
-        border-radius: 8px;
-        background-color: #2c2f33;
-        color: #00ff99;
-        width: 100%; /* Ensure the password field takes full width */
+/* ===== Responsive Tweaks ===== */
+@media (max-width: 600px) {
+    input,
+    textarea,
+    select,
+    #input-text,
+    #output-text,
+    #password-field,
+    #password,
+    #file-password {
+        width: 100%;
+        max-width: 90%;
     }
+}

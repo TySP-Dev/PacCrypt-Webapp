@@ -4,29 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PacCrypt</title>
-  <!-- Favicon Link -->
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+
+  <!-- Styles and Scripts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
   <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
 </head>
+
 <body class="dark">
+
+  <!-- Header -->
   <header>
     <h1>PacCrypt</h1>
     <p>Secure Encoding, Encryption and Password Generation</p>
   </header>
 
   <main>
+
+    <!-- Password Generator Section -->
     <section id="password-section" class="card">
       <h2>Password Generator</h2>
       <div class="form-group">
-        <input
-          type="text"
-          id="password-field"
-          placeholder="Generated password will appear here"
-          readonly
-        />
+        <input type="text" id="password-field" placeholder="Generated password will appear here" readonly />
         <div class="button-group">
           <button type="button" onclick="generateRandomPassword()">Generate</button>
           <button type="button" onclick="copyToClipboard('password-field', 'password-toast')">Copy</button>
@@ -35,6 +37,7 @@
       </div>
     </section>
 
+    <!-- Pacman Game Section -->
     <section id="pacman-section" class="card" style="display: none;">
       <div class="pacman-wrapper">
         <canvas id="pacmanCanvas" width="800" height="600"></canvas>
@@ -46,15 +49,19 @@
       </div>
     </section>
 
+    <!-- Text Encoder/Decoder & File Encrypt/Decrypt Section -->
     <section id="encoding-section" class="card">
       <h2>Text Encoder / Decoder & File Encryption</h2>
       <form id="main-form" class="form-group" method="POST" onsubmit="handleSubmit(event)">
+        
+        <!-- Encryption Type Dropdown -->
         <label for="encryption-type">Select Encryption Type:</label>
         <select id="encryption-type" name="encryption-type" onchange="toggleEncryptionOptions()">
           <option value="basic">Basic (Less Secure)</option>
           <option value="advanced" selected>Advanced (More Secure)</option>
         </select>
 
+        <!-- Encrypt / Decrypt Radio Buttons -->
         <div id="encryption-options" class="radio-group">
           <label class="radio-button">
             <input type="radio" name="operation" value="encrypt" id="encrypt-radio" checked />
@@ -66,41 +73,45 @@
           </label>
         </div>
 
+        <!-- Text Area Input -->
         <div id="text-section" class="form-group">
-          <textarea
-            id="input-text"
-            name="message"
-            placeholder="Enter text here..."
-            oninput="toggleInputMode()"
-          ></textarea>
-          <div id="password-input">
-            <input type="password" id="password" name="password" placeholder="Enter Password" />
-          </div>
+          <textarea id="input-text" name="message" placeholder="Enter text here..." oninput="toggleInputMode()"></textarea>
         </div>
 
+        <!-- Password Input (shared for file + text) -->
+        <div id="password-input" class="form-group">
+          <input type="password" id="password" name="password" placeholder="Enter Password" />
+        </div>
+
+        <!-- File Upload Section -->
         <div id="file-section" class="form-group" style="display: none;">
           <input type="file" id="file-input" onchange="toggleInputMode()" />
           <button type="button" id="remove-file-btn" onclick="removeFile()">Remove File</button>
         </div>
 
-        <div id="file-password-input" style="display: none;">
-          <input type="password" id="file-password" name="file-password" placeholder="Enter Password for File" />
+        <!-- Submit Button -->
+        <div class="button-group">
+          <button type="submit" class="submit-button">Submit</button>
         </div>
-
-        <button type="button" class="submit-button" onclick="handleSubmit(event)">Submit</button>
       </form>
 
+      <!-- Output Text Area -->
       <div style="height: 20px;"></div>
-
       <textarea id="output-text" readonly placeholder="Result will appear here">{{ result }}</textarea>
+
+      <!-- Output Controls -->
       <div class="button-group">
         <button type="button" onclick="copyToClipboard('output-text', 'output-toast')">Copy Output</button>
         <button type="button" onclick="clearAll()">Clear All</button>
       </div>
+
+      <!-- Output Toast Notification -->
       <div id="output-toast" class="toast">Copied to Clipboard!</div>
     </section>
+
   </main>
 
+  <!-- Footer -->
   <footer>
     <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
     <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
@@ -108,5 +119,6 @@
            alt="GitHub Logo" width="100" />
     </a>
   </footer>
+
 </body>
 </html>

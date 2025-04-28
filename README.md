@@ -1,83 +1,172 @@
 # PacCrypt WebApp
 
-**PacCrypt** is a web-based application designed to provide secure encoding, encryption, and password generation. It allows users to easily encrypt and decrypt text and files, with both basic and advanced encryption options. It also features a password generator and a simple Pac-Man game as an Easter egg!
+**PacCrypt** is a web-based platform that allows you to securely encrypt/decrypt text and files, generate passwords, and even enjoy a hidden Pac-Man game!  
+Built using Python (Flask), JavaScript, and AES-GCM encryption.
 
-## Features
+Official Website: [paccrypt.unnaturalll.dev](http://paccrypt.unnaturalll.dev)
 
-- **Basic and Advanced Encryption**: Choose between simple encryption (Caesar Cipher) or more secure AES-GCM encryption.
-- **File Encryption/Decryption**: Encrypt or decrypt files with a password.
-- **Password Generator**: Generate secure random passwords with customizable length and complexity.
-- **Pac-Man Game**: A fun Easter egg! Play a Pac-Man game when you type "pacman" in the text area.
-- **Copy to Clipboard**: Copy generated passwords or encrypted results with one click.
-- **Responsive Design**: Fully responsive web design that works across different screen sizes.
+---
 
-## Installation
+## ✨ Features
 
-### Prerequisites
+- 🔒 **Basic and Advanced Encryption** (Text and Files)
+- 🔑 **Password Generator**
+- 🄹️ **Pac-Man Easter Egg** (Type `pacman` to unlock!)
+- 📱 **Responsive Design** (Mobile Friendly)
+- ⚡ **One-Click Start Scripts** (Dev and Production modes)
+- 🎨 **Modern Animated UI** (Dark Mode + Green Neon Theme)
+
+---
+
+## 👨‍💻 Installation
+
+### 📋 Prerequisites
 
 - **Python 3.7+**
-- **Nginx** (for reverse proxy and SSL configuration for hosting)
+- **Flask 3+**
+- **Cryptography 42+**
+- **Waitress 2.1+**
+- **Nginx** (Recommended for production)
 
-Official PacCrypt website: paccrypt.unnaturalll.dev
+---
 
-### Steps to Set Up Locally:
+### ⚡ Quick Setup
 
 1. Clone the repository:
+
+   ```bash
    git clone https://github.com/TySP-Dev/PacCrypt.git
-   cd paccrypt-webapp
+   cd paccrypt-webapp-final
+   ```
 
 2. Create and activate a virtual environment:
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 
-3. Install the required Python dependencies:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
+
+3. Install required Python packages:
+
+   ```bash
    pip install -r requirements.txt
+   ```
 
-4. Run the Flask app:
-   python app.py
+4. Start the app:
 
-5. Open http://127.0.0.1:5000 to access the app locally.
+   **Windows**:
+   ```bash
+   start_dev.bat     # For Development
+   start_prod.bat    # For Production
+   ```
 
-## Usage
+   **Linux / Mac**:
+   ```bash
+   chmod +x start_dev.sh start_prod.sh
+   ./start_dev.sh    # For Development
+   ./start_prod.sh   # For Production
+   ```
 
-### Encryption and Decryption
+5. Access the app at:  
+   [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-#### For text encryption/decryption:
+---
 
--- Select the encryption type (Basic or Advanced).
+## 🚀 Usage Guide
 
--- Choose whether to Encrypt or Decrypt.
+### 🔒 Text Encryption/Decryption
 
--- Enter text in the Input Text area.
+- Select **Encryption Type** (Basic or Advanced)
+- Enter text
+- Provide password (Advanced only)
+- Choose **Encrypt** or **Decrypt**
+- Click **Submit**
 
--- Enter a password (if using advanced encryption).
+### 📁 File Encryption/Decryption
 
--- Click submit.
+- Select **Advanced** encryption
+- Upload a file
+- Provide password
+- Choose **Encrypt** or **Decrypt**
+- Click **Submit**
 
-#### For file encryption/decryption:
+### 🔑 Password Generator
 
--- Select encryption type **Advanced.**
+- Click **Generate** to create a secure password
+- Click **Copy** to save it to clipboard
 
--- Choose whether to Encrypt or Decrypt.
+### 🎮 Pac-Man Easter Egg
 
--- Upload a file.
+- Type **`pacman`** into the input box to unlock the hidden Pac-Man game!
 
--- Enter a password for encryption/decryption.
+---
 
--- Click submit.
+## 🛡️ Hosting with Nginx (optional)
 
-### Password Generation:
+Recommended for secure public deployment.
 
-Click the Generate button to create a random password, then use the Copy button to copy it to your clipboard.
+Example minimal Nginx config:
 
-### Pac-Man Game (Easter Egg):
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
 
-Type the word "pacman" in the input box to unlock the Pac-Man game!
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
 
-### Contributing:
+> Tip: Set up SSL with Let's Encrypt for HTTPS security! 🔐
 
-Feel free to open an issue or submit a pull request for improvements, bug fixes, or new features!
+---
 
-### License
+## 📂 Project Structure
 
-This project is open source and available under the MIT License.
+```
+paccrypt-webapp-final/
+├── app.py
+├── requirements.txt
+├── templates/
+│   ├── index.html
+│   ├── 404.html
+│   └── 403.html
+│   └── 500.html
+├── static/
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── script.js
+│   ├── img/
+│   │   └── PacCrypt.png
+│   └── audio/
+│       └── chomp.mp3
+├── start_dev.bat
+├── start_prod.bat
+├── start_dev.sh
+├── start_prod.sh
+├── README.md
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+- Add new features
+- Fix bugs
+- Improve performance
+- Expand the Pac-Man Easter Egg 🎮
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
