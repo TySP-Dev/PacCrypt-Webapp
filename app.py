@@ -453,24 +453,36 @@ def admin_update_server():
         return redirect(url_for("admin_login"))
 
     try:
-        output = subprocess.check_output(["git", "pull", "origin", "main"], cwd=os.getcwd()).decode()
-        flash("✅ Server updated successfully!<br><pre>" + html.escape(output) + "</pre>", "update")
-    except subprocess.CalledProcessError as e:
-        flash("❌ Failed to update server:<br><pre>" + html.escape(e.output.decode()) + "</pre>", "update")
-    except Exception as ex:
-        flash("❌ An error occurred: " + str(ex), "update")
+        repo_dir = os.path.abspath(os.path.dirname(__file__))  # Dynamically get current project directory
+        repo_url = "https://github.com/TySP-Dev/PacCrypt.git"
+
+        # Ensure directory is a git repo
+        if not os.path.exists(os.path.join(repo_dir, ".git")):
+            return redirect(url_for('500.html'))
+
+        # Pull latest changes
+        subprocess.run(["git", "fetch"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "pull", repo_url, "main"], cwd=repo_dir, check=True)
+
+        flash("Server updated from GitHub!", "clear-feedback")
+    except Exception as e:
+        flash(f"Update failed: {str(e)}", "clear-feedback")
 
     return redirect(url_for("admin_page"))
 
-@app.route("/sitemap")
+
+@app.route("/sitemap", methods=["GET"])
 def sitemap():
-    output = ["<h1>PacCrypt Sitemap</h1>", "<ul>"]
-    for rule in app.url_map.iter_rules():
-        if rule.endpoint != 'static':
-            url = url_for(rule.endpoint, **{arg: f"<{arg}>" for arg in rule.arguments})
-            output.append(f"<li><a href='{url}'>{url}</a></li>")
-    output.append("</ul>")
-    return "\n".join(output)
+    sitemap_xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://paccrypt.unnaturalll.dev/</loc></url>
+  <url><loc>https://paccrypt.unnaturalll.dev/pickup</loc></url>
+  <url><loc>https://paccrypt.unnaturalll.dev/adminpage</loc></url>
+  <url><loc>https://paccrypt.unnaturalll.dev/sitemap</loc></url>
+</urlset>'''
+    return sitemap_xml, 200, {'Content-Type': 'application/xml'}
+
 
 @app.route("/robots.txt")
 def robots_txt():
