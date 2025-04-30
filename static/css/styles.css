@@ -38,7 +38,6 @@ header {
 
     header p {
         font-size: 1.2em;
-        color: #00ff99;
     }
 
 /* ===== Main Layout ===== */
@@ -53,26 +52,26 @@ main {
     gap: 30px;
 }
 
-/* ===== Section Card Styling ===== */
+/* ===== Card Styling ===== */
 .card {
     background-color: #1e1e1e;
     padding: 25px;
     width: 100%;
-    max-width: 800px;
     border-radius: 12px;
     box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
     text-align: center;
 }
 
-/* ===== Uniform Form Inputs ===== */
+/* ===== Form Group Styling ===== */
 .form-group {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 0px;
     width: 100%;
 }
 
+/* ===== Inputs, Textareas, Selects ===== */
 input,
 textarea,
 select,
@@ -85,7 +84,9 @@ input[type="file"] {
     background-color: #2c2f33;
     color: #00ff99;
     font-size: 1em;
+    text-align: center;
     transition: 0.3s;
+    margin:10px auto;
 }
 
 textarea {
@@ -93,15 +94,13 @@ textarea {
     resize: none;
 }
 
-input[type="password"],
-#password {
+input[type="password"] {
     min-height: 50px;
 }
 
 input[type="file"] {
     border: 2px dashed #00ff99;
     cursor: pointer;
-    text-align: center;
 }
 
     input[type="file"]::file-selector-button {
@@ -118,6 +117,7 @@ input[type="file"] {
             background-color: #00cc77;
         }
 
+/* ===== Focus Effects ===== */
 input:focus,
 textarea:focus,
 select:focus {
@@ -125,29 +125,27 @@ select:focus {
     box-shadow: 0 0 8px rgba(0, 255, 153, 0.8);
 }
 
-/* ===== Match input and output sizes ===== */
+/* ===== Textareas Specific Widths ===== */
 #input-text,
 #output-text {
     width: 80%;
     max-width: 500px;
     height: 140px;
-    box-sizing: border-box;
-    resize: none;
 }
 
-/* ===== Buttons ===== */
+/* ===== Button Group Styling ===== */
 .button-group {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 15px;
-    margin-top: 15px;
+    margin: 10px auto;
     width: 100%;
 }
 
 button {
     padding: 10px 20px;
-    border: 2px solid #00ff99;
+    border: 0px solid #00ff99;
     border-radius: 8px;
     background-color: #2c2f33;
     color: #00ff99;
@@ -156,6 +154,7 @@ button {
     transition: 0.3s;
     width: 100%;
     max-width: 200px;
+    /* margin: 10px auto; */
 }
 
     button:hover {
@@ -163,69 +162,86 @@ button {
         color: #121212;
     }
 
-/* ===== Toggle Buttons (Encode/Decode, Encrypt/Decrypt) ===== */
-.radio-group {
+/* ===== Toggle Switch Styling ===== */
+.toggle-container {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 12px;
+    margin-top: 10px;
     width: 100%;
 }
 
-.radio-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1px 1px;
-    border: 2px solid #00ff99;
-    border-radius: 8px;
-    background-color: #2c2f33;
-    color: #00ff99;
-    cursor: pointer;
-    transition: 0.3s;
+/* Make sure the switch aligns well */
+.switch {
     position: relative;
-    box-shadow: none;
+    display: flex;
+    align-items: center; /* <-- Ensures vertical centering */
+    justify-content: center;
+    width: 70px;
+    height: 34px;
 }
 
-    .radio-button:hover {
-        background-color: #00ff99;
-        color: #121212;
+    /* Hide the checkbox */
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
     }
 
-    /* Hide the actual radio input */
-    .radio-button input {
-        display: none;
-    }
-
-        /* When selected, make the ENTIRE BUTTON glow */
-        .radio-button input:checked + span {
-            background-color: #2c2f33;
-            color: #00ff99;
-            box-shadow: 0 0 15px rgba(0, 255, 153, 0.7);
-            border-radius: 8px;
-            padding: 8px 18px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-
-/* ===== Remove File Button ===== */
-#remove-file-btn {
-    display: none;
-    margin-top: 8px;
-    padding: 8px 16px;
-    border: 2px solid #ff5555;
+/* The slider */
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: #2c2f33;
-    color: #ff5555;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
+    border: 2px solid #00ff99;
+    border-radius: 34px;
+    transition: .4s;
+    display: flex;
+    align-items: center;
 }
 
-    #remove-file-btn:hover {
-        background-color: #ff5555;
-        color: #2c2f33;
+    /* The circle knob */
+    .slider::before {
+        content: "";
+        height: 26px;
+        width: 26px;
+        background-color: #00ff99;
+        border-radius: 50%;
+        transition: .4s;
+        transform: translateX(4px);
+        position: absolute;
+        left: 0px;
+        bottom: 2.5px;
+    }
+
+input:checked + .slider::before {
+    transform: translateX(36px);
+}
+
+/* Toggle Labels */
+.labels {
+    position: relative;
+    width: 100px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #00ff99;
+    margin-top: 5px;
+}
+
+    .labels::before,
+    .labels::after {
+        content: attr(data-on);
+        width: 50%;
+        text-align: center;
+    }
+
+    .labels::after {
+        content: attr(data-off);
     }
 
 /* ===== Toast Notifications ===== */
@@ -244,11 +260,11 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
     .toast.show {
         visibility: visible;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
     }
 
 @keyframes fadein {
@@ -269,21 +285,6 @@ button {
     to {
         opacity: 0;
     }
-}
-
-/* ===== Pacman Canvas ===== */
-.pacman-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 18px;
-}
-
-#pacmanCanvas {
-    background-color: black;
-    border: 2px solid #00ff99;
-    border-radius: 10px;
-    width: 800px;
-    height: 600px;
 }
 
 /* ===== Footer ===== */
@@ -310,15 +311,114 @@ footer {
 
 /* ===== Responsive Tweaks ===== */
 @media (max-width: 600px) {
-    input,
-    textarea,
-    select,
-    #input-text,
-    #output-text,
-    #password-field,
-    #password,
-    #file-password {
+    input, textarea, select, #input-text, #output-text {
         width: 100%;
         max-width: 90%;
     }
+}
+
+/* ===== Copy Feedback Message ===== */
+.copy-feedback {
+    background-color: #2a2a2a;
+    border: 1px solid #00ff99;
+    padding: 6px 12px;
+    margin-top: 6px;
+    border-radius: 6px;
+    color: #00ff99;
+    font-size: 0.9em;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+    .copy-feedback.show {
+        opacity: 1;
+    }
+
+.hidden {
+    display: none !important;
+}
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+    form input,
+    form button {
+        width: 80%;
+        max-width: 500px;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+
+section.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.copy-feedback.show {
+    display: block;
+    width: fit-content;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background-color: #2a2a2a;
+    color: #00ff99;
+    border: 1px solid #00ff99;
+    border-radius: 6px;
+}
+
+#logContainer {
+    white-space: pre-wrap; /* Wrap long lines */
+    word-wrap: break-word; /* Break long words if needed */
+    overflow-wrap: anywhere; /* Ensures long strings don't overflow */
+    background: black;
+    color: lime;
+    padding: 10px;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#pacmanCanvas {
+    background-color: black;
+    display: block;
+    margin: auto;
+    border: 2px solid #00ff99;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+}
+#pacman-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    display: block;
+    margin: auto;
+    border: 2px solid #00ff99;
+    border-radius: 12px;
+}
+
+.pacman-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+
+/* ===== Utility: Hidden Class ===== */
+.hidden {
+    display: none !important;
 }

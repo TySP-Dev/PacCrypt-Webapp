@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - PacCrypt</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body class="dark">
+
+    <header class="card mb-5">
+        <h1>PacCrypt Admin Panel</h1>
+        <p>Site Overview & Controls</p>
+    </header>
+
+    <main>
+
+        <!-- Site Map -->
+        <section class="card form-group">
+            <h2>🔍 Site Map</h2>
+            <ul style="list-style: none; padding-left: 0;">
+                {% for route in routes %}
+                <li style="margin-bottom: 5px;">🔗 <code>{{ route }}</code></li>
+                {% endfor %}
+            </ul>
+
+            <div class="button-group mt-4">
+                <a href="{{ url_for('restart_server') }}">
+                    <button type="button">🔁 Restart Server</button>
+                </a>
+                <a href="{{ url_for('admin_logout') }}">
+                    <button type="button">🚪 Log Out</button>
+                </a>
+            </div>
+
+            <form action="{{ url_for('admin_reset') }}" method="POST" onsubmit="return confirm('Are you sure you want to reset admin credentials?');">
+                <button type="submit" class="mt-4" style="background-color: #b90000;">⚠️ Reset Admin</button>
+            </form>
+
+            <form action="{{ url_for('admin_clear_uploads') }}" method="POST"
+                  onsubmit="return confirm('Are you sure you want to delete ALL uploaded files?');">
+                <button type="submit">🗑 Clear All Uploaded Files</button>
+            </form>
+
+            {% with messages = get_flashed_messages(with_categories=true, category_filter=['clear-feedback']) %}
+            {% for category, message in messages %}
+            <div class="copy-feedback show">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+        </section>
+
+        <!-- Change Admin Password -->
+        <section class="card form-group mt-5">
+            <h2>🔑 Change Admin Password</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true, category_filter=['password-feedback']) %}
+            {% for category, message in messages %}
+            <div class="copy-feedback show">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+
+
+            <form method="POST" action="{{ url_for('admin_change_password') }}">
+                <input type="password" name="current_password" placeholder="Current Password" required>
+                <input type="password" name="new_password" placeholder="New Password" required>
+                <button type="submit">Update Password</button>
+            </form>
+        </section>
+
+        <!-- Update Server -->
+        <section class="card form-group mt-5">
+            <h2>📦 Update Server from GitHub</h2>
+            <form method="POST" action="{{ url_for('admin_update_server') }}">
+                <button type="submit" onclick="return confirm('Are you sure you want to pull the latest changes from GitHub?')">
+                    🔁 Pull Latest Changes
+                </button>
+            </form>
+
+            {% with update_msgs = get_flashed_messages(category_filter=["update"]) %}
+            {% if update_msgs %}
+            <div class="copy-feedback show" style="margin-top: 12px;">
+                {{ update_msgs[0] | safe }}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </section>
+
+        <!-- Server Status -->
+        <section class="card form-group mt-5">
+            <h2>📊 Server Status</h2>
+            <ul style="list-style: none; padding-left: 0;">
+                <li>🕒 Uptime: <code>{{ server_info.uptime }}</code></li>
+                <li>📅 Server Time: <code>{{ server_info.time }}</code></li>
+                <li>🐍 Python Version: <code>{{ server_info.python }}</code></li>
+                <li>⚙️ Flask Debug Mode: <code>{{ server_info.debug }}</code></li>
+            </ul>
+        </section>
+
+        <!-- Server Logs -->
+        <section class="card form-group mt-5">
+            <h2>📜 Server Logs</h2>
+            <button onclick="toggleLogs()" style="margin-bottom: 10px;">🔽 Show/Hide Logs</button>
+            <div id="logLoader" style="display: none; margin-bottom: 10px;">Loading logs...</div>
+            <pre id="logContainer" style="display: none; max-height: 400px; overflow-y: auto; background: black; color: lime; padding: 10px; border-radius: 8px;"></pre>
+        </section>
+
+        <!-- System Settings -->
+        <section class="card form-group mt-5">
+            <h2>🧩 System Configuration</h2>
+            <p>You can manage upload storage, limits, and expiration policies here:</p>
+            <a href="{{ url_for('admin_settings') }}">
+                <button type="button">🛠️ Manage Upload Settings</button>
+            </a>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png"
+                 alt="GitHub Logo" width="100" />
+        </a>
+        <a href="{{ url_for('sitemap') }}">
+            <img src="\static\img\sitemap.png"
+                 alt="Sitemap Png" width="55" />
+        </a>
+    </footer>
+
+    <!-- Log Viewer Script -->
+    <script>
+    async function toggleLogs() {
+        const logContainer = document.getElementById('logContainer');
+        const logLoader = document.getElementById('logLoader');
+        if (logContainer.style.display === 'none') {
+            logLoader.style.display = 'block';
+            const response = await fetch('{{ url_for('admin_logs') }}');
+            const data = await response.json();
+            logLoader.style.display = 'none';
+            logContainer.innerText = data.logs.join('\\n');
+            logContainer.style.display = 'block';
+        } else {
+            logContainer.style.display = 'none';
+        }
+    }
+    </script>
+
+</body>
+</html>

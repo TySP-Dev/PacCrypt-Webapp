@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickup File - PacCrypt</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="dark">
+
+    <header class="card mb-5">
+        <h1>PacCrypt Pickup</h1>
+        <p>Enter passwords to retrieve your file securely</p>
+    </header>
+
+    <main>
+        <section class="card form-group">
+            <h2>🔐 Decrypt and Download</h2>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul style="color: red;">
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <input type="password" name="pickup_password" placeholder="Pickup Password" required>
+                <input type="password" name="enc_password" placeholder="Encryption Password" required>
+                <div class="button-group mt-3">
+                    <button type="submit">📥 Decrypt and Download</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card form-group mt-5">
+            <p style="font-size: 0.9em; color: gray;">Link ID: <code>{{ file_id }}</code></p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png"
+                 alt="GitHub Logo" width="100" />
+        </a>
+    </footer>
+
+</body>
+</html>

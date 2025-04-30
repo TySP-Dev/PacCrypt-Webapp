@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Setup - PacCrypt</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body class="dark">
+
+    <header class="card mb-5">
+        <h1>PacCrypt Admin</h1>
+        <p>Secure Admin Setup</p>
+    </header>
+
+    <main>
+        <section class="card form-group">
+            <h2>🛡️ Create Admin Account</h2>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <p style="color: red;">{{ messages[0] }}</p>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <div class="button-group mt-3">
+                    <button type="submit">📝 Set Credentials</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png"
+                 alt="GitHub Logo" width="100" />
+        </a>
+    </footer>
+
+</body>
+</html>

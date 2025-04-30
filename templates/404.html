@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 - PacCrypt</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 - PacCrypt</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
 
-  <header>
-    <h1>PacCrypt</h1>
-    <p>Secure Encoding, Encryption and Password Generation</p>
-  </header>
+    <header class="card mb-5">
+        <h1>PacCrypt</h1>
+        <p>Secure Encoding, Encryption and Password Generation</p>
+    </header>
 
-  <main>
+    <main>
+        <section class="card form-group" style="padding: 50px 30px;">
+            <h2 style="color: #ff0066; font-size: 2.5em;">❓ 404 - Not Found</h2>
+            <p class="mt-4" style="font-size: 1.2em; color: #cccccc;">
+                Whoops! That page doesn’t seem to exist. Maybe it got encrypted? 🧩🔐
+            </p>
 
-    <section class="card">
-      <h2>404 - Page Not Found</h2>
-      <p>Oops! The page you're looking for doesn't exist.</p>
+            <div class="button-group mt-4">
+                <a href="{{ url_for('index') }}">
+                    <button type="button">⬅️ Return Home</button>
+                </a>
+            </div>
+        </section>
+    </main>
 
-      <div class="button-group" style="margin-top: 20px;">
-        <a href="{{ url_for('index') }}">
-          <button type="button">Return Home</button>
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png"
+                 alt="GitHub Logo" width="100" />
         </a>
-      </div>
-    </section>
-
-  </main>
-
-  <footer>
-    <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
-    <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-      <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2020%2F11%2FGitHub-Logo.png&f=1&nofb=1&ipt=b9d67651e313b2cdbeae8a7ec9320dadb278a21a2e7217810b839c233c04f265"
-           alt="GitHub Logo" width="100">
-    </a>
-  </footer>
+    </footer>
 
 </body>
 </html>

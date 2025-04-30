@@ -1,124 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PacCrypt</title>
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
-
-  <!-- Styles and Scripts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-  <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PacCrypt</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/PacCrypt.png') }}" type="image/png" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </head>
-
 <body class="dark">
 
-  <!-- Header -->
-  <header>
-    <h1>PacCrypt</h1>
-    <p>Secure Encoding, Encryption and Password Generation</p>
-  </header>
+    <header class="card mb-5">
+        <h1>PacCrypt</h1>
+        <p>Encrypt and share your text or files securely</p>
+    </header>
 
-  <main>
+    <main>
 
-    <!-- Password Generator Section -->
-    <section id="password-section" class="card">
-      <h2>Password Generator</h2>
-      <div class="form-group">
-        <input type="text" id="password-field" placeholder="Generated password will appear here" readonly />
-        <div class="button-group">
-          <button type="button" onclick="generateRandomPassword()">Generate</button>
-          <button type="button" onclick="copyToClipboard('password-field', 'password-toast')">Copy</button>
-        </div>
-        <div id="password-toast" class="toast">Copied to Clipboard!</div>
-      </div>
-    </section>
+        <!-- Password Generator -->
+        <section class="card form-group mt-5">
+            <h2>🔑 Password Generator</h2>
+            <div class="form-group">
+                <input type="text" id="generated-password" readonly />
+                <div class="button-group">
+                    <button type="button" id="generate-btn">🎲 Generate</button>
+                    <button type="button" id="copy-btn">📋 Copy</button>
+                </div>
+                <div id="password-copy-feedback" class="copy-feedback">Copied to clipboard!</div>
+            </div>
+        </section>
 
-    <!-- Pacman Game Section -->
-    <section id="pacman-section" class="card" style="display: none;">
-      <div class="pacman-wrapper">
-        <canvas id="pacmanCanvas" width="800" height="600"></canvas>
-      </div>
-      <audio id="chomp-sound" src="{{ url_for('static', filename='audio/chomp.mp3') }}"></audio>
-      <div class="button-group">
-        <button type="button" onclick="resetGame()">Restart Game</button>
-        <button type="button" onclick="exitGame()">Exit Game</button>
-      </div>
-    </section>
+        <!-- Pacman Game Section -->
+        <section id="pacman-section" class="card" style="display: none;">
+            <div class="pacman-wrapper">
+                <canvas id="pacmanCanvas" width="800" height="600"></canvas>
+            </div>
+            <audio id="chomp-sound" src="{{ url_for('static', filename='audio/chomp.mp3') }}"></audio>
+            <div class="button-group">
+                <button type="button" onclick="resetGame()">Restart Game</button>
+                <button type="button" onclick="exitGame()">Exit Game</button>
+            </div>
+        </section>
 
-    <!-- Text Encoder/Decoder & File Encrypt/Decrypt Section -->
-    <section id="encoding-section" class="card">
-      <h2>Text Encoder / Decoder & File Encryption</h2>
-      <form id="main-form" class="form-group" method="POST" onsubmit="handleSubmit(event)">
-        
-        <!-- Encryption Type Dropdown -->
-        <label for="encryption-type">Select Encryption Type:</label>
-        <select id="encryption-type" name="encryption-type" onchange="toggleEncryptionOptions()">
-          <option value="basic">Basic (Less Secure)</option>
-          <option value="advanced" selected>Advanced (More Secure)</option>
-        </select>
 
-        <!-- Encrypt / Decrypt Radio Buttons -->
-        <div id="encryption-options" class="radio-group">
-          <label class="radio-button">
-            <input type="radio" name="operation" value="encrypt" id="encrypt-radio" checked />
-            <span id="encrypt-label">Encrypt</span>
-          </label>
-          <label class="radio-button">
-            <input type="radio" name="operation" value="decrypt" id="decrypt-radio" />
-            <span id="decrypt-label">Decrypt</span>
-          </label>
-        </div>
+        <!-- Encrypt & Decrypt Section -->
+        <section class="card form-group" id="encoding-section">
+            <h2>🔐 Encrypt & Decrypt</h2>
+            <form id="crypto-form" class="form-group">
 
-        <!-- Text Area Input -->
-        <div id="text-section" class="form-group">
-          <textarea id="input-text" name="message" placeholder="Enter text here..." oninput="toggleInputMode()"></textarea>
-        </div>
+                <div class="form-group">
+                    <label for="encryption-type">Encryption Type:</label>
+                    <select id="encryption-type">
+                        <option value="basic">Basic Cipher</option>
+                        <option value="advanced" selected>Advanced AES</option>
+                    </select>
+                </div>
 
-        <!-- Password Input (shared for file + text) -->
-        <div id="password-input" class="form-group">
-          <input type="password" id="password" name="password" placeholder="Enter Password" />
-        </div>
+                <div class="toggle-container">
+                    <span id="toggle-left-label">Encrypt</span>
+                    <label class="switch">
+                        <input type="checkbox" id="operation-toggle" />
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="toggle-right-label">Decrypt</span>
+                </div>
 
-        <!-- File Upload Section -->
-        <div id="file-section" class="form-group" style="display: none;">
-          <input type="file" id="file-input" onchange="toggleInputMode()" />
-          <button type="button" id="remove-file-btn" onclick="removeFile()">Remove File</button>
-        </div>
+                <div id="text-section" class="form-group">
+                    <textarea id="input-text" placeholder="Enter your message..."></textarea>
+                </div>
 
-        <!-- Submit Button -->
-        <div class="button-group">
-          <button type="submit" class="submit-button">Submit</button>
-        </div>
-      </form>
+                <div id="password-input" class="form-group">
+                    <input type="password" id="password" placeholder="Password (AES only)" />
+                </div>
 
-      <!-- Output Text Area -->
-      <div style="height: 20px;"></div>
-      <textarea id="output-text" readonly placeholder="Result will appear here">{{ result }}</textarea>
+                <div id="file-section" class="form-group" style="display: none;">
+                    <input type="file" id="file-input" />
+                    <button type="button" id="remove-file-btn">🗑 Remove File</button>
+                </div>
 
-      <!-- Output Controls -->
-      <div class="button-group">
-        <button type="button" onclick="copyToClipboard('output-text', 'output-toast')">Copy Output</button>
-        <button type="button" onclick="clearAll()">Clear All</button>
-      </div>
+                <div class="button-group mt-3">
+                    <button type="submit">⚡ Execute</button>
+                    <button type="button" id="clear-all-btn">🧹 Clear All</button>
+                </div>
 
-      <!-- Output Toast Notification -->
-      <div id="output-toast" class="toast">Copied to Clipboard!</div>
-    </section>
+                <textarea id="output-text" readonly placeholder="Result will appear here..."></textarea>
+                <div class="button-group">
+                    <button type="button" id="copy-output-btn">📋 Copy Output</button>
+                </div>
+                <div id="output-copy-feedback" class="copy-feedback">Copied to clipboard!</div>
+            </form>
+        </section>
 
-  </main>
+        <!-- PacCrypt Sharing -->
+        <section class="card form-group mt-5">
+            <h2>📤 PacCrypt Sharing</h2>
+            <p>Securely share a file with encryption and a pickup password.</p>
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
-    <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-      <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2020%2F11%2FGitHub-Logo.png&f=1&nofb=1&ipt=b9d67651e313b2cdbeae8a7ec9320dadb278a21a2e7217810b839c233c04f265"
-           alt="GitHub Logo" width="100" />
-    </a>
-  </footer>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul style="color: lime; list-style: none; padding-left: 0;">
+                {% for message in messages %}
+                <li>
+                    {{ message | safe }}
+                    {% if "pickup" in message %}
+                    <br />
+                    <span id="shared-link">{{ message.split(" at ")[1] }}</span>
+                    <button type="button" id="copy-shared-link">📋 Copy Link</button>
+                    <div id="shared-link-feedback" class="copy-feedback">Copied to clipboard!</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            <script>window.onload = () => window.scrollTo(0, document.body.scrollHeight);</script>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data" class="form-group">
+                <input type="file" name="file" id="upload-file" required />
+                <input type="password" name="enc_password" placeholder="Encryption Password" required />
+                <input type="password" name="pickup_password" placeholder="Pickup Password" required />
+                <div class="button-group mt-3">
+                    <button type="submit">🔒 Upload and Generate Link</button>
+                </div>
+            </form>
+
+            <p class="text-muted mt-3" style="font-size: 0.85em;">
+                Files expire after {{ settings.max_file_age_days }} days.<br />
+                Max file size: {{ settings.max_file_size_bytes // (1024 * 1024 * 1024) }} GB.
+            </p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png"
+                 alt="GitHub Logo" width="100" />
+        </a>
+    </footer>
 
 </body>
 </html>
