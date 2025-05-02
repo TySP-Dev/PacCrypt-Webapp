@@ -1,24 +1,32 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PacCrypt - Admin Settings" />
     <title>Admin Settings - PacCrypt</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+    
+    <!-- Stylesheets -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 </head>
 <body class="dark">
-
-    <header class="card mb-5">
+    <!-- Header -->
+    <header class="card">
         <h1>PacCrypt Admin Settings</h1>
-        <p>Manage upload configuration securely</p>
+        <p>Manage upload configuration</p>
     </header>
 
+    <!-- Main Content -->
     <main>
+        <!-- Settings Form Section -->
         <section class="card form-group">
             <h2>⚙️ Upload Settings</h2>
 
+            <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
             {% if messages %}
             <ul style="color: lime;">
@@ -29,16 +37,18 @@
             {% endif %}
             {% endwith %}
 
+            <!-- Settings Form -->
             <form method="POST">
                 <label for="upload_folder">Upload Folder Path:</label>
-                <input type="text" name="upload_folder" id="upload_folder" value="{{ settings.upload_folder }}" required>
+                <input type="text" name="upload_folder" id="upload_folder" value="{{ settings.upload_folder }}" required />
 
                 <label for="max_file_age_days">Max File Age (Days):</label>
-                <input type="number" name="max_file_age_days" id="max_file_age_days" value="{{ settings.max_file_age_days }}" min="1" required>
+                <input type="number" name="max_file_age_days" id="max_file_age_days" value="{{ settings.max_file_age_days }}" min="1" required />
 
                 <label for="max_file_size_gb">Max File Size (GB):</label>
-                <input type="number" name="max_file_size_gb" id="max_file_size_gb" value="{{ settings.max_file_size_bytes // (1024 * 1024 * 1024) }}" step="0.1" min="0.1" required>
+                <input type="number" name="max_file_size_gb" id="max_file_size_gb" value="{{ settings.max_file_size_bytes // (1024 * 1024 * 1024) }}" step="0.1" min="0.1" required />
 
+                <!-- Action Buttons -->
                 <div class="button-group mt-4">
                     <button type="submit">💾 Save Settings</button>
                     <a href="{{ url_for('admin_page') }}">
@@ -53,10 +63,8 @@
     <footer>
         <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
         <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-            <img src="\static\img\Github_logo.png"
-                 alt="GitHub Logo" width="100" />
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
         </a>
     </footer>
-
 </body>
 </html>

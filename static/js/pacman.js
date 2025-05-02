@@ -1,47 +1,28 @@
-// pacman.js
+/**
+ * Pacman game module.
+ * Handles game logic, rendering, and user interaction.
+ */
 
+// ===== Game Constants =====
+const PACMAN_SPEED = 40;
+const ENEMY_SPEED = 20;
+const CELL_SIZE = 40;
+const DOT_SIZE = 5;
+
+// ===== Game State =====
+let canvas, ctx, pacman, enemy, walls, dots, score;
+let cols, rows, randSeed, gameInterval;
+
+// ===== Public Interface =====
 export function setupGame() {
     console.log('[PacMan] Game module loaded.');
-
     window.startPacman = startPacman;
     window.exitGame = exitGame;
 }
 
-// ====== Game Constants & State ======
-let canvas, ctx, pacman, enemy, walls, dots, score;
-let pacmanSpeed = 40,
-    enemySpeed = 20,
-    cellSize = 40,
-    dotSize = 5,
-    cols, rows, randSeed, gameInterval;
-
-// ====== Game Initialization ======
-
 export function startPacman() {
-    canvas = document.getElementById("pacmanCanvas");
-    ctx = canvas.getContext("2d");
-
-    cols = Math.floor(canvas.width / cellSize);
-    rows = Math.floor(canvas.height / cellSize);
-    walls = [];
-    dots = [];
-    score = 0;
-
-    clearInterval(gameInterval);
-    const seedSource = document.getElementById("password")?.value || "pacman";
-    randSeed = [...seedSource].reduce((s, c) => s + c.charCodeAt(0), 0);
-
-
-    generateWalls();
-    generateDots();
-
-    pacman = spawn();
-    do { enemy = spawn(); } while (enemy.x === pacman.x && enemy.y === pacman.y);
-
-    pacman.dx = pacman.dy = 0;
-    document.addEventListener("keydown", movePacman);
-
-    gameInterval = setInterval(gameLoop, 150);
+    initializeGame();
+    setupGameLoop();
 }
 
 export function stopPacman() {
@@ -61,8 +42,39 @@ export function exitGame() {
     document.getElementById("encoding-section").style.display = "block";
 }
 
-// ====== Game Setup Helpers ======
+// ===== Game Initialization =====
+function initializeGame() {
+    canvas = document.getElementById("pacmanCanvas");
+    ctx = canvas.getContext("2d");
 
+    cols = Math.floor(canvas.width / CELL_SIZE);
+    rows = Math.floor(canvas.height / CELL_SIZE);
+    walls = [];
+    dots = [];
+    score = 0;
+
+    clearInterval(gameInterval);
+    
+    // Get seed from generated password or use default
+    const passwordField = document.getElementById("generated-password");
+    const seedSource = passwordField?.value || "pacman";
+    randSeed = [...seedSource].reduce((s, c) => s + c.charCodeAt(0), 0);
+
+    generateWalls();
+    generateDots();
+
+    pacman = spawn();
+    do { enemy = spawn(); } while (enemy.x === pacman.x && enemy.y === pacman.y);
+
+    pacman.dx = pacman.dy = 0;
+    document.addEventListener("keydown", movePacman);
+}
+
+function setupGameLoop() {
+    gameInterval = setInterval(gameLoop, 150);
+}
+
+// ===== Game Setup Helpers =====
 function spawn() {
     const options = [];
     for (let c = 1; c < cols - 1; c++) {
@@ -80,9 +92,9 @@ function spawn() {
     }
     const s = options[Math.floor(rand() * options.length)];
     return {
-        x: s.c * cellSize + cellSize / 2,
-        y: s.r * cellSize + cellSize / 2,
-        size: cellSize / 2 - 5,
+        x: s.c * CELL_SIZE + CELL_SIZE / 2,
+        y: s.r * CELL_SIZE + CELL_SIZE / 2,
+        size: CELL_SIZE / 2 - 5,
         dx: 0,
         dy: 0
     };
@@ -94,9 +106,29 @@ function rand() {
 }
 
 function generateWalls() {
+    // First pass: generate initial walls
     for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
             if (c === 0 || r === 0 || c === cols - 1 || r === rows - 1 || rand() < 0.2) {
+                walls.push({ c, r });
+            }
+        }
+    }
+
+    // Second pass: check for enclosed spaces
+    for (let c = 1; c < cols - 1; c++) {
+        for (let r = 1; r < rows - 1; r++) {
+            // Skip if already a wall
+            if (walls.some(w => w.c === c && w.r === r)) continue;
+
+            // Check all four sides
+            const hasWallAbove = walls.some(w => w.c === c && w.r === r - 1);
+            const hasWallBelow = walls.some(w => w.c === c && w.r === r + 1);
+            const hasWallLeft = walls.some(w => w.c === c - 1 && w.r === r);
+            const hasWallRight = walls.some(w => w.c === c + 1 && w.r === r);
+
+            // If all sides are walls, make this spot a wall too
+            if (hasWallAbove && hasWallBelow && hasWallLeft && hasWallRight) {
                 walls.push({ c, r });
             }
         }
@@ -120,8 +152,7 @@ function generateDots() {
     }
 }
 
-// ====== Game Loop & Drawing ======
-
+// ===== Game Loop & Rendering =====
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawWalls();
@@ -137,7 +168,7 @@ function gameLoop() {
 function drawWalls() {
     ctx.fillStyle = "blue";
     walls.forEach(w => {
-        ctx.fillRect(w.c * cellSize, w.r * cellSize, cellSize, cellSize);
+        ctx.fillRect(w.c * CELL_SIZE, w.r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     });
 }
 
@@ -151,7 +182,10 @@ function drawChar(ch, color) {
 function drawScore() {
     ctx.fillStyle = "white";
     ctx.font = "20px Poppins";
-    ctx.fillText("Score: " + score, 10, 25);
+    ctx.textAlign = "left";
+    // Add padding to prevent clipping
+    const padding = 10;
+    ctx.fillText("Score: " + score, padding, 25);
 }
 
 function checkGameOver() {
@@ -167,17 +201,16 @@ function checkGameOver() {
     }
 }
 
-// ====== Movement Logic ======
-
+// ===== Movement Logic =====
 function movePacman(e) {
     const k = e.key;
     if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(k)) return;
     e.preventDefault();
 
-    if (k === "ArrowUp") { pacman.dx = 0; pacman.dy = -pacmanSpeed; }
-    if (k === "ArrowDown") { pacman.dx = 0; pacman.dy = pacmanSpeed; }
-    if (k === "ArrowLeft") { pacman.dx = -pacmanSpeed; pacman.dy = 0; }
-    if (k === "ArrowRight") { pacman.dx = pacmanSpeed; pacman.dy = 0; }
+    if (k === "ArrowUp") { pacman.dx = 0; pacman.dy = -PACMAN_SPEED; }
+    if (k === "ArrowDown") { pacman.dx = 0; pacman.dy = PACMAN_SPEED; }
+    if (k === "ArrowLeft") { pacman.dx = -PACMAN_SPEED; pacman.dy = 0; }
+    if (k === "ArrowRight") { pacman.dx = PACMAN_SPEED; pacman.dy = 0; }
 }
 
 function moveChar(ch) {
@@ -191,7 +224,7 @@ function moveChar(ch) {
 
 function moveEnemy() {
     const options = [];
-    const moves = [[enemySpeed, 0], [-enemySpeed, 0], [0, enemySpeed], [0, -enemySpeed]];
+    const moves = [[ENEMY_SPEED, 0], [-ENEMY_SPEED, 0], [0, ENEMY_SPEED], [0, -ENEMY_SPEED]];
 
     moves.forEach(([dx, dy]) => {
         const nx = enemy.x + dx;
@@ -225,8 +258,8 @@ function willCollide(x, y, size) {
     const top = y - size, bottom = y + size;
 
     return walls.some(w => {
-        const wx1 = w.c * cellSize, wy1 = w.r * cellSize;
-        const wx2 = wx1 + cellSize, wy2 = wy1 + cellSize;
+        const wx1 = w.c * CELL_SIZE, wy1 = w.r * CELL_SIZE;
+        const wx2 = wx1 + CELL_SIZE, wy2 = wy1 + CELL_SIZE;
         return right > wx1 && left < wx2 && bottom > wy1 && top < wy2;
     });
 }
@@ -235,8 +268,8 @@ function eatDots() {
     const chompSound = document.getElementById("chomp-sound");
 
     dots = dots.filter(d => {
-        const dx = d.c * cellSize + cellSize / 2;
-        const dy = d.r * cellSize + cellSize / 2;
+        const dx = d.c * CELL_SIZE + CELL_SIZE / 2;
+        const dy = d.r * CELL_SIZE + CELL_SIZE / 2;
 
         if (Math.abs(pacman.x - dx) < pacman.size && Math.abs(pacman.y - dy) < pacman.size) {
             score++;
@@ -253,10 +286,11 @@ function eatDots() {
     ctx.fillStyle = "white";
     dots.forEach(d => {
         ctx.beginPath();
-        ctx.arc(d.c * cellSize + cellSize / 2, d.r * cellSize + cellSize / 2, dotSize, 0, Math.PI * 2);
+        ctx.arc(d.c * CELL_SIZE + CELL_SIZE / 2, d.r * CELL_SIZE + CELL_SIZE / 2, DOT_SIZE, 0, Math.PI * 2);
         ctx.fill();
     });
 }
 
+// ===== Global Functions =====
 window.resetGame = resetGame;
 window.exitGame = exitGame;

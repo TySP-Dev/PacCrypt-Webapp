@@ -1,11 +1,12 @@
-// main.js
+/**
+ * Main application entry point.
+ * Initializes UI and game components when the DOM is loaded.
+ */
 
 import { setupUI } from './ui.js';
 import { setupGame } from './pacman.js';
 
-/**
- * Initialize UI and game once the DOM is fully loaded.
- */
+// Initialize application when DOM is fully loaded
 window.addEventListener("DOMContentLoaded", () => {
     setupUI();
     setupGame();

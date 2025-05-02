@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>500 - PacCrypt</title>
+    <meta name="description" content="PacCrypt - 500 Internal Server Error" />
+    <title>500 Server Error - PacCrypt</title>
 
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+    
+    <!-- Stylesheets -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    
+    <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
-
-    <header class="card mb-5">
+    <!-- Header -->
+    <header class="card">
         <h1>PacCrypt</h1>
-        <p>Secure Encoding, Encryption and Password Generation</p>
+        <p>Encrypt and share your text or files securely</p>
     </header>
 
+    <!-- Main Content -->
     <main>
         <section class="card form-group" style="padding: 50px 30px;">
             <h2 style="color: #ff3300; font-size: 2.5em;">💥 500 - Server Error</h2>
             <p class="mt-4" style="font-size: 1.2em; color: #cccccc;">
                 Uh oh! The ghosts chomped the server wires. 🧟‍♂️👾
-                We’re working on patching it up.
+                We're working on patching it up.
             </p>
 
+            <!-- Navigation -->
             <div class="button-group mt-4">
                 <a href="{{ url_for('index') }}">
                     <button type="button">⬅️ Return Home</button>
@@ -37,10 +45,8 @@
     <footer>
         <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
         <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-            <img src="\static\img\Github_logo.png"
-                 alt="GitHub Logo" width="100" />
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
         </a>
     </footer>
-
 </body>
 </html>

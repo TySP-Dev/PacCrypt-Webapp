@@ -1,97 +1,93 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PacCrypt - Admin Panel" />
     <title>Admin Panel - PacCrypt</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+    
+    <!-- Stylesheets -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    
+    <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
-
-    <header class="card mb-5">
+    <!-- Header -->
+    <header class="card">
         <h1>PacCrypt Admin Panel</h1>
         <p>Site Overview & Controls</p>
     </header>
 
+    <!-- Main Content -->
     <main>
+        <!-- Site Map Section -->
+        <section id="sitemap-section" class="card form-group">
+            <h2>💾 Server Management</h2>
+            
+            <div class="sitemap-header">
+                <button onclick="toggleSitemap()" style="margin-bottom: 10px;">Show Site Map</button>
+            </div>
+            
+            <div id="sitemap-list" class="sitemap-content" style="display: none;">
+                <ul style="list-style: none; padding-left: 0;">
+                    {% for route in routes %}
+                    <li style="margin-bottom: 5px;">🔗 <code>{{ route }}</code></li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-        <!-- Site Map -->
-        <section class="card form-group">
-            <h2>🔍 Site Map</h2>
-            <ul style="list-style: none; padding-left: 0;">
-                {% for route in routes %}
-                <li style="margin-bottom: 5px;">🔗 <code>{{ route }}</code></li>
-                {% endfor %}
-            </ul>
-
-            <div class="button-group mt-4">
-                <a href="{{ url_for('restart_server') }}">
-                    <button type="button">🔁 Restart Server</button>
-                </a>
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button onclick="restartServer()">🔁 Restart Server</button>
                 <a href="{{ url_for('admin_logout') }}">
                     <button type="button">🚪 Log Out</button>
                 </a>
             </div>
 
-            <form action="{{ url_for('admin_reset') }}" method="POST" onsubmit="return confirm('Are you sure you want to reset admin credentials?');">
-                <button type="submit" class="mt-4" style="background-color: #b90000;">⚠️ Reset Admin</button>
-            </form>
+            <!-- Update and Settings Buttons -->
+            <div class="button-group">
+                <button onclick="updateServer()">🔁 Pull Latest Changes</button>
+                <a href="{{ url_for('admin_settings') }}">
+                    <button type="button">🛠️ Manage Upload Settings</button>
+                </a>
+            </div>
 
-            <form action="{{ url_for('admin_clear_uploads') }}" method="POST"
-                  onsubmit="return confirm('Are you sure you want to delete ALL uploaded files?');">
-                <button type="submit">🗑 Clear All Uploaded Files</button>
-            </form>
+            <!-- Admin Reset and Clear Uploads Buttons -->
+            <div class="button-group">    
+                <button onclick="resetAdmin()" class="danger-button">⚠️ Reset Admin</button>
+                <button onclick="clearUploads()" class="danger-button">🗑 Clear Uploaded Files</button>
+            </div>
 
-            {% with messages = get_flashed_messages(with_categories=true, category_filter=['clear-feedback']) %}
-            {% for category, message in messages %}
-            <div class="copy-feedback show">{{ message }}</div>
-            {% endfor %}
-            {% endwith %}
-
+            <!-- Flash Messages -->
+            <div id="admin-feedback" class="copy-feedback" style="display: none;"></div>
         </section>
 
-        <!-- Change Admin Password -->
-        <section class="card form-group mt-5">
+        <!-- Password Change Section -->
+        <section id="password-change-section" class="card form-group">
             <h2>🔑 Change Admin Password</h2>
 
+            <!-- Password Feedback -->
             {% with messages = get_flashed_messages(with_categories=true, category_filter=['password-feedback']) %}
             {% for category, message in messages %}
             <div class="copy-feedback show">{{ message }}</div>
             {% endfor %}
             {% endwith %}
 
-
-
+            <!-- Password Change Form -->
             <form method="POST" action="{{ url_for('admin_change_password') }}">
-                <input type="password" name="current_password" placeholder="Current Password" required>
-                <input type="password" name="new_password" placeholder="New Password" required>
+                <input type="password" name="current_password" placeholder="Current Password" required />
+                <input type="password" name="new_password" placeholder="New Password" required />
                 <button type="submit">Update Password</button>
             </form>
         </section>
 
-        <!-- Update Server -->
-        <section class="card form-group mt-5">
-            <h2>📦 Update Server from GitHub</h2>
-            <form method="POST" action="{{ url_for('admin_update_server') }}">
-                <button type="submit" onclick="return confirm('Are you sure you want to pull the latest changes from GitHub?')">
-                    🔁 Pull Latest Changes
-                </button>
-            </form>
-
-            {% with update_msgs = get_flashed_messages(category_filter=["update"]) %}
-            {% if update_msgs %}
-            <div class="copy-feedback show" style="margin-top: 12px;">
-                {{ update_msgs[0] | safe }}
-            </div>
-            {% endif %}
-            {% endwith %}
-        </section>
-
-        <!-- Server Status -->
-        <section class="card form-group mt-5">
+        <!-- Server Status Section -->
+        <section id="server-status-section" class="card form-group">
             <h2>📊 Server Status</h2>
             <ul style="list-style: none; padding-left: 0;">
                 <li>🕒 Uptime: <code>{{ server_info.uptime }}</code></li>
@@ -101,35 +97,22 @@
             </ul>
         </section>
 
-        <!-- Server Logs -->
-        <section class="card form-group mt-5">
+        <!-- Server Logs Section -->
+        <section id="server-logs-section" class="card form-group">
             <h2>📜 Server Logs</h2>
             <button onclick="toggleLogs()" style="margin-bottom: 10px;">🔽 Show/Hide Logs</button>
             <div id="logLoader" style="display: none; margin-bottom: 10px;">Loading logs...</div>
-            <pre id="logContainer" style="display: none; max-height: 400px; overflow-y: auto; background: black; color: lime; padding: 10px; border-radius: 8px;"></pre>
+            <pre id="logContainer" style="display: none;"></pre>
         </section>
-
-        <!-- System Settings -->
-        <section class="card form-group mt-5">
-            <h2>🧩 System Configuration</h2>
-            <p>You can manage upload storage, limits, and expiration policies here:</p>
-            <a href="{{ url_for('admin_settings') }}">
-                <button type="button">🛠️ Manage Upload Settings</button>
-            </a>
-        </section>
-
-    </main>
 
     <!-- Footer -->
     <footer>
         <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
         <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-            <img src="\static\img\Github_logo.png"
-                 alt="GitHub Logo" width="100" />
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
         </a>
         <a href="{{ url_for('sitemap') }}">
-            <img src="\static\img\sitemap.png"
-                 alt="Sitemap Png" width="55" />
+            <img src="\static\img\sitemap.png" alt="Sitemap Png" width="55" />
         </a>
     </footer>
 
@@ -151,5 +134,124 @@
     }
     </script>
 
+    <script>
+    function toggleSitemap() {
+        const list = document.getElementById('sitemap-list');
+        const button = document.querySelector('.sitemap-header button');
+        
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            button.textContent = 'Hide Site Map';
+        } else {
+            list.style.display = 'none';
+            button.textContent = 'Show Site Map';
+        }
+    }
+
+    async function restartServer() {
+        if (!confirm('Are you sure you want to restart the server? This will temporarily disconnect all users.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("restart_server") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                // Add a small delay before redirecting to allow the server to restart
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showFeedback(data.error || 'Failed to restart server.');
+            }
+        } catch (error) {
+            showFeedback('Failed to restart server.');
+        }
+    }
+
+    async function updateServer() {
+        if (!confirm('Are you sure you want to pull the latest changes from GitHub?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_update_server") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+            } else {
+                showFeedback(data.error || 'Failed to update server from GitHub.');
+            }
+        } catch (error) {
+            showFeedback('Failed to update server from GitHub.');
+        }
+    }
+
+    async function resetAdmin() {
+        if (!confirm('Are you sure you want to reset admin credentials?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_reset") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                showFeedback('Admin credentials reset. Please create new credentials.');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("admin_setup") }}';
+                }, 2000);
+            }
+        } catch (error) {
+            showFeedback('Failed to reset admin credentials.');
+        }
+    }
+
+    async function clearUploads() {
+        if (!confirm('Are you sure you want to delete ALL uploaded files?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_clear_uploads") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                showFeedback('All uploaded files have been cleared.');
+            }
+        } catch (error) {
+            showFeedback('Failed to clear uploaded files.');
+        }
+    }
+
+    function showFeedback(message) {
+        const feedback = document.getElementById('admin-feedback');
+        feedback.textContent = message;
+        feedback.style.display = 'block';
+        feedback.classList.add('show');
+        
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+    </script>
 </body>
 </html>

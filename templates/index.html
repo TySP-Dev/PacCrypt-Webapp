@@ -3,31 +3,38 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PacCrypt</title>
+    <meta name="description" content="PacCrypt - Secure text and file encryption with password generation" />
+    <title>PacCrypt - Encrypt and share your text or files securely</title>
+    
+    <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='img/PacCrypt.png') }}" type="image/png" />
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </head>
 <body class="dark">
-
-    <header class="card mb-5">
+    <!-- Header -->
+    <header class="card">
         <h1>PacCrypt</h1>
         <p>Encrypt and share your text or files securely</p>
     </header>
 
+    <!-- Main Content -->
     <main>
-
-        <!-- Password Generator -->
-        <section class="card form-group mt-5">
+        <!-- Password Generator Section -->
+        <section id="password-generator-section" class="card form-group">
             <h2>🔑 Password Generator</h2>
             <div class="form-group">
                 <input type="text" id="generated-password" readonly />
                 <div class="button-group">
                     <button type="button" id="generate-btn">🎲 Generate</button>
-                    <button type="button" id="copy-btn">📋 Copy</button>
+                    <button type="button" id="copy-btn">📋 Copy Password</button>
                 </div>
-                <div id="password-copy-feedback" class="copy-feedback">Copied to clipboard!</div>
+                <div id="password-copy-feedback" class="copy-feedback">Password copied to clipboard!</div>
             </div>
         </section>
 
@@ -43,12 +50,11 @@
             </div>
         </section>
 
-
-        <!-- Encrypt & Decrypt Section -->
-        <section class="card form-group" id="encoding-section">
+        <!-- Encryption/Decryption Section -->
+        <section id="encoding-section" class="card form-group">
             <h2>🔐 Encrypt & Decrypt</h2>
             <form id="crypto-form" class="form-group">
-
+                <!-- Encryption Type Selection -->
                 <div class="form-group">
                     <label for="encryption-type">Encryption Type:</label>
                     <select id="encryption-type">
@@ -57,6 +63,7 @@
                     </select>
                 </div>
 
+                <!-- Operation Toggle -->
                 <div class="toggle-container">
                     <span id="toggle-left-label">Encrypt</span>
                     <label class="switch">
@@ -66,37 +73,44 @@
                     <span id="toggle-right-label">Decrypt</span>
                 </div>
 
+                <!-- Text Input Section -->
                 <div id="text-section" class="form-group">
                     <textarea id="input-text" placeholder="Enter your message..."></textarea>
                 </div>
 
+                <!-- Password Input -->
                 <div id="password-input" class="form-group">
-                    <input type="password" id="password" placeholder="Password (AES only)" />
+                    <input type="password" id="password" placeholder="Encryption/Decryption Password" />
                 </div>
 
+                <!-- File Input Section -->
                 <div id="file-section" class="form-group" style="display: none;">
                     <input type="file" id="file-input" />
                     <button type="button" id="remove-file-btn">🗑 Remove File</button>
                 </div>
 
-                <div class="button-group mt-3">
-                    <button type="submit">⚡ Execute</button>
-                    <button type="button" id="clear-all-btn">🧹 Clear All</button>
-                </div>
-
-                <textarea id="output-text" readonly placeholder="Result will appear here..."></textarea>
+                <!-- Action Buttons -->
                 <div class="button-group">
+                    <button type="submit">⚡ Execute</button>
                     <button type="button" id="copy-output-btn">📋 Copy Output</button>
                 </div>
-                <div id="output-copy-feedback" class="copy-feedback">Copied to clipboard!</div>
+
+                <!-- Output Section -->
+                <textarea id="output-text" readonly placeholder="Encrypted/Decrypted text will appear here..."></textarea>
+                <div class="button-group">
+                    <button type="button" id="clear-all-btn" class="danger-button">🧹 Clear All</button>
+                </div>
+                <div id="output-copy-feedback" class="copy-feedback">Text copied to clipboard!</div>
             </form>
         </section>
 
-        <!-- PacCrypt Sharing -->
-        <section class="card form-group mt-5">
-            <h2>📤 PacCrypt Sharing</h2>
-            <p>Securely share a file with encryption and a pickup password.</p>
+        <!-- File Sharing Section -->
+        <section id="sharing-section" class="card form-group">
+            <h2>📤 PacCrypt Share</h2>
+            <h3>Securely share encrypted files.</h3>
+            <p>Do not lose your passwords, data will be lost forever!</p>
 
+            <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
             {% if messages %}
             <ul style="color: lime; list-style: none; padding-left: 0;">
@@ -104,10 +118,12 @@
                 <li>
                     {{ message | safe }}
                     {% if "pickup" in message %}
-                    <br />
-                    <span id="shared-link">{{ message.split(" at ")[1] }}</span>
-                    <button type="button" id="copy-shared-link">📋 Copy Link</button>
-                    <div id="shared-link-feedback" class="copy-feedback">Copied to clipboard!</div>
+                    <div class="share-link-container">
+                        <a id="share-link" href="{{ message.split(' at ')[1] }}" target="_blank">{{ message.split(" at ")[1] }}</a>
+                        <!--- <span id="share-link">{{ message.split(" at ")[1] }}</span> --->
+                        <button type="button" id="copy-share-btn">📋 Copy Link</button>
+                        <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
+                    </div>
                     {% endif %}
                 </li>
                 {% endfor %}
@@ -116,31 +132,75 @@
             {% endif %}
             {% endwith %}
 
-            <form method="POST" enctype="multipart/form-data" class="form-group">
+            <!-- File Upload Form -->
+            <!-- Share Link Container (initially hidden) -->
+            <div class="share-link-container" id="share-link-container" style="display: none;">
+                <a id="share-link" href="#" target="_blank"></a>
+                <button type="button" id="copy-share-btn">📋 Copy Link</button>
+                <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
+            </div>
+            <form method="POST" enctype="multipart/form-data" class="form-group" id="upload-form">
                 <input type="file" name="file" id="upload-file" required />
-                <input type="password" name="enc_password" placeholder="Encryption Password" required />
+                <input type="password" name="enc_password" placeholder="Encryption/Decryption Password" required />
                 <input type="password" name="pickup_password" placeholder="Pickup Password" required />
-                <div class="button-group mt-3">
+                <div class="button-group">
                     <button type="submit">🔒 Upload and Generate Link</button>
                 </div>
             </form>
 
+            <script>
+                document.getElementById('upload-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    
+                    try {
+                        const response = await fetch('/', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+                        
+                        if (data.success && data.pickup_url) {
+                            const shareLink = document.getElementById('share-link');
+                            const shareLinkContainer = document.getElementById('share-link-container');
+                            
+                            shareLink.href = data.pickup_url;
+                            shareLink.textContent = data.pickup_url;
+                            shareLinkContainer.style.display = 'flex';
+                            
+                            // Clear form fields
+                            document.getElementById('upload-file').value = '';
+                            document.getElementsByName('enc_password')[0].value = '';
+                            document.getElementsByName('pickup_password')[0].value = '';
+                            
+                            // Scroll to the share link
+                            shareLinkContainer.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    } catch (error) {
+                        alert('Error uploading file: ' + error.message);
+                    }
+                });
+            </script>
+
+            <!-- File Limits Information -->
             <p class="text-muted mt-3" style="font-size: 0.85em;">
                 Files expire after {{ settings.max_file_age_days }} days.<br />
                 Max file size: {{ settings.max_file_size_bytes // (1024 * 1024 * 1024) }} GB.
             </p>
         </section>
-
     </main>
 
     <!-- Footer -->
     <footer>
         <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
         <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
-            <img src="\static\img\Github_logo.png"
-                 alt="GitHub Logo" width="100" />
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
         </a>
     </footer>
-
 </body>
 </html>

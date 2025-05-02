@@ -1,7 +1,7 @@
 /* ===== Global Reset ===== */
 * {
     box-sizing: border-box;
-    margin: 0;
+    margin: 3px;
     padding: 0;
 }
 
@@ -27,7 +27,7 @@ header {
     box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
     width: 100%;
     max-width: 800px;
-    margin-bottom: 30px;
+    margin-bottom: 40px !important;
 }
 
     header h1 {
@@ -48,8 +48,8 @@ main {
     align-items: center;
     width: 100%;
     max-width: 800px;
-    padding: 20px;
-    gap: 30px;
+    padding: 0;
+    gap: 0;
 }
 
 /* ===== Card Styling ===== */
@@ -68,6 +68,7 @@ main {
     flex-direction: column;
     align-items: center;
     gap: 0px;
+    max-width: 725px;
     width: 100%;
 }
 
@@ -79,14 +80,17 @@ input[type="file"] {
     width: 80%;
     max-width: 500px;
     padding: 12px 20px;
-    border: 2px solid #00ff99;
+    border: 1px solid #00ff99;
     border-radius: 8px;
     background-color: #2c2f33;
     color: #00ff99;
     font-size: 1em;
-    text-align: center;
+    text-align: left;
     transition: 0.3s;
-    margin:10px auto;
+}
+
+select {
+    text-align: center;
 }
 
 textarea {
@@ -122,7 +126,7 @@ input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    box-shadow: 0 0 8px rgba(0, 255, 153, 0.8);
+    box-shadow: 0 0 10px rgba(0, 255, 153, 0.8);
 }
 
 /* ===== Textareas Specific Widths ===== */
@@ -136,10 +140,9 @@ select:focus {
 /* ===== Button Group Styling ===== */
 .button-group {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     gap: 15px;
-    margin: 10px auto;
     width: 100%;
 }
 
@@ -152,15 +155,27 @@ button {
     font-size: 1em;
     cursor: pointer;
     transition: 0.3s;
-    width: 100%;
-    max-width: 200px;
-    /* margin: 10px auto; */
+    width: auto;
+    min-width: 225px;
+    max-width: 300px;
 }
 
     button:hover {
         background-color: #00ff99;
         color: #121212;
+        box-shadow: 0 0 10px rgba(0, 255, 153, 0.4);
     }
+
+.danger-button {
+    background-color: #5f3131;
+    box-shadow: 0 0 20px rgba(185, 0, 0, 0.4);
+}
+
+.danger-button:hover {
+    background-color: #ff0000;
+    color: #121212;
+    box-shadow: 0 0 40px rgb(255, 0, 0);
+}
 
 /* ===== Toggle Switch Styling ===== */
 .toggle-container {
@@ -168,7 +183,6 @@ button {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin-top: 10px;
     width: 100%;
 }
 
@@ -207,15 +221,15 @@ button {
     /* The circle knob */
     .slider::before {
         content: "";
-        height: 26px;
-        width: 26px;
+        height: 22px;
+        width: 22px;
         background-color: #00ff99;
         border-radius: 50%;
         transition: .4s;
-        transform: translateX(4px);
+        transform: translateX(2px);
         position: absolute;
-        left: 0px;
-        bottom: 2.5px;
+        left: auto;
+        bottom: auto;
     }
 
 input:checked + .slider::before {
@@ -295,9 +309,9 @@ footer {
     color: #00ff99;
     border-radius: 12px;
     box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
-    margin-top: 30px;
     width: 100%;
     max-width: 800px;
+    margin-top: 40px;
 }
 
     footer a {
@@ -309,39 +323,70 @@ footer {
             color: #ff0066;
         }
 
-/* ===== Responsive Tweaks ===== */
+/* ===== Responsive Design ===== */
 @media (max-width: 600px) {
-    input, textarea, select, #input-text, #output-text {
+    input,
+    textarea,
+    select,
+    #input-text,
+    #output-text {
         width: 100%;
         max-width: 90%;
     }
 }
 
 /* ===== Copy Feedback Message ===== */
-.copy-feedback {
-    background-color: #2a2a2a;
-    border: 1px solid #00ff99;
+.copy-feedback, #shared-link-feedback {
+    background-color: #2c2f33;
     padding: 6px 12px;
     margin-top: 6px;
     border-radius: 6px;
     color: #00ff99;
     font-size: 0.9em;
+    display: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
     text-align: center;
     max-width: 300px;
     margin-left: auto;
     margin-right: auto;
+    transition: opacity 0.3s ease;
 }
 
-    .copy-feedback.show {
-        opacity: 1;
-    }
-
-.hidden {
-    display: none !important;
+.copy-feedback.show, #shared-link-feedback.show {
+    display: block;
+    opacity: 1;
 }
 
+.share-link-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+#share-link {
+    display: block;
+    background-color: #2c2f33;
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: #00ff99;
+    font-size: 0.9em;
+    text-align: center;
+    max-width: 720px;
+    width: 100%;
+    word-break: break-all;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+#share-link:hover {
+    color: #00cc77;
+    background-color: #36393f;
+}
+
+/* ===== Form Styling ===== */
 form {
     width: 100%;
     display: flex;
@@ -349,65 +394,39 @@ form {
     align-items: center;
 }
 
-    form input,
-    form button {
-        width: 80%;
-        max-width: 500px;
-        margin-bottom: 12px;
-        text-align: center;
-    }
+form input {
+    width: 80%;
+    max-width: 500px;
+    text-align: left;
+}
 
+/* ===== Section Card Styling ===== */
 section.card {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.copy-feedback.show {
-    display: block;
-    width: fit-content;
-    margin-top: 10px;
-    padding: 6px 12px;
-    background-color: #2a2a2a;
-    color: #00ff99;
-    border: 1px solid #00ff99;
-    border-radius: 6px;
-}
-
-#logContainer {
-    white-space: pre-wrap; /* Wrap long lines */
-    word-wrap: break-word; /* Break long words if needed */
-    overflow-wrap: anywhere; /* Ensures long strings don't overflow */
-    background: black;
-    color: lime;
-    padding: 10px;
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-    width: 100%;
-    box-sizing: border-box;
-}
-
+/* ===== Pacman Game Styling ===== */
 #pacmanCanvas {
     background-color: black;
     display: block;
-    margin: auto;
     border: 2px solid #00ff99;
     border-radius: 12px;
-    align-items: center;
-    justify-content: center;
+    max-width: 700px;
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: contain;
 }
+
 #pacman-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 20px;
-    padding: 20px;
-    display: block;
-    margin: auto;
-    border: 2px solid #00ff99;
-    border-radius: 12px;
+    margin-bottom: 25px;
+    max-width: 725px;
+    width: 100%;
 }
 
 .pacman-wrapper {
@@ -415,10 +434,197 @@ section.card {
     justify-content: center;
     align-items: center;
     width: 100%;
+    padding: 0;
+    margin: 0;
 }
 
-
-/* ===== Utility: Hidden Class ===== */
+/* ===== Utility Classes ===== */
 .hidden {
     display: none !important;
+}
+
+/* ===== Section Spacing ===== */
+#password-generator-section {
+    margin-bottom: 25px;
+}
+
+#encoding-section {
+    margin-bottom: 25px;
+}
+
+/* ===== File Input Section ===== */
+#encoding-section #file-section {
+    display: none;
+}
+
+#encoding-section #file-section:not(.hidden) {
+    display: flex;
+}
+
+/* Ensure PacCrypt sharing file uploader is always visible */
+#sharing-section #file-section {
+    display: flex;
+}
+
+/* Mobile-friendly download button */
+.download-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Mobile form adjustments */
+.pickup-form {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.pickup-form input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .download-btn {
+        padding: 15px;
+        font-size: 18px;
+    }
+    
+    .pickup-form input[type="password"] {
+        padding: 15px;
+        font-size: 18px;
+    }
+}
+
+/* ===== Admin Section Styling ===== */
+#sitemap-section,
+#password-change-section,
+#server-update-section,
+#server-status-section,
+#server-logs-section,
+#system-settings-section {
+    margin-bottom: 25px;
+    padding: 25px;
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+}
+
+.sitemap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.sitemap-header h3 {
+    color: #00ff99;
+    margin: 0;
+}
+
+.collapse-btn {
+    background: none;
+    border: none;
+    color: #00ff99;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: transform 0.3s ease;
+}
+
+.collapse-btn:hover {
+    transform: scale(1.1);
+}
+
+.sitemap-content {
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+#sitemap-section ul,
+#server-status-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 15px;
+}
+
+#sitemap-section li,
+#server-status-section li {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #2c2f33;
+    border-radius: 6px;
+    color: #00ff99;
+}
+
+#server-logs-section button {
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 300px;
+}
+
+#logLoader {
+    color: #00ff99;
+    text-align: center;
+    padding: 10px;
+}
+
+#logContainer {
+    background-color: #2c2f33;
+    color: #00ff99;
+    padding: 15px;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+#system-settings-section {
+    margin-bottom: unset !important;
+    padding: 25px;
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+}
+
+/* ===== Mobile Responsive Adjustments ===== */
+@media (max-width: 768px) {
+    #sitemap-section,
+    #password-change-section,
+    #server-update-section,
+    #server-status-section,
+    #server-logs-section,
+    #system-settings-section {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    #sitemap-section li,
+    #server-status-section li {
+        font-size: 0.9em;
+        padding: 6px;
+    }
+
+    #logContainer {
+        font-size: 0.9em;
+        padding: 10px;
+    }
 }

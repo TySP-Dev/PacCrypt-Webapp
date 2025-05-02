@@ -1,72 +1,99 @@
-﻿// ui.js
+﻿/**
+ * UI management module.
+ * Handles user interface interactions and form handling.
+ */
+
 import { encryptFile, decryptFile } from './fileops.js';
 
-/**
- * Initialize all UI functionality after DOM is loaded
- */
+// ===== UI Initialization =====
 export function setupUI() {
-    toggleEncryptionOptions();
-    toggleInputMode();
+    // Set initial state of remove button to hidden
+    const removeBtn = document.getElementById("remove-file-btn");
+    if (removeBtn) {
+        removeBtn.style.display = "none";
+    }
+    
+    initializeEventListeners();
+}
 
-    const encryptionTypeEl = document.getElementById("encryption-type");
-    const inputTextEl = document.getElementById("input-text");
-    const formEl = document.getElementById("crypto-form");
-    const removeFileBtn = document.getElementById("remove-file-btn");
-    const clearAllBtn = document.getElementById("clear-all-btn");
-    const generateBtn = document.getElementById("generate-btn");
-    const copyPasswordBtn = document.getElementById("copy-btn");
-    const copyOutputBtn = document.getElementById("copy-output-btn");
-    const toggleSwitch = document.getElementById("operation-toggle");
-    const copyShareBtn = document.getElementById("copy-share-btn");
-    const shareLink = document.getElementById("share-link");
+// ===== Event Listeners =====
+function initializeEventListeners() {
+    const elements = {
+        encryptionType: document.getElementById("encryption-type"),
+        inputText: document.getElementById("input-text"),
+        form: document.getElementById("crypto-form"),
+        removeFileBtn: document.getElementById("remove-file-btn"),
+        clearAllBtn: document.getElementById("clear-all-btn"),
+        generateBtn: document.getElementById("generate-btn"),
+        copyPasswordBtn: document.getElementById("copy-btn"),
+        copyOutputBtn: document.getElementById("copy-output-btn"),
+        toggleSwitch: document.getElementById("operation-toggle"),
+        copyShareBtn: document.getElementById("copy-share-btn"),
+        shareLink: document.getElementById("share-link")
+    };
 
-    if (
-        encryptionTypeEl && inputTextEl && formEl && removeFileBtn &&
-        clearAllBtn && generateBtn && copyPasswordBtn && toggleSwitch
-    ) {
-        encryptionTypeEl.addEventListener("change", toggleEncryptionOptions);
-        inputTextEl.addEventListener("input", () => {
-            toggleInputMode();
-            checkForPacman();
-        });
-        formEl.addEventListener("submit", handleSubmit);
-        removeFileBtn.addEventListener("click", removeFile);
-        clearAllBtn.addEventListener("click", clearAll);
-        generateBtn.addEventListener("click", generateRandomPassword);
-        copyPasswordBtn.addEventListener("click", () => copyToClipboard("generated-password", "password-copy-feedback"));
-        copyOutputBtn?.addEventListener("click", () => copyToClipboard("output-text", "output-copy-feedback"));
-        toggleSwitch.addEventListener("change", updateToggleLabels);
-
-        const copySharedLinkBtn = document.getElementById("copy-shared-link");
-        const sharedLinkEl = document.getElementById("shared-link");
-
-        if (copySharedLinkBtn && sharedLinkEl) {
-            copySharedLinkBtn.addEventListener("click", () => {
-                navigator.clipboard.writeText(sharedLinkEl.textContent.trim()).then(() => {
-                    const feedback = document.getElementById("shared-link-feedback");
-                    if (feedback) {
-                        feedback.classList.remove("hidden");
-                        feedback.classList.add("show");
-
-                        setTimeout(() => {
-                            feedback.classList.remove("show");
-                            feedback.classList.add("hidden");
-                        }, 3000);
-                    }
-                });
-            });
-
-            sharedLinkEl.scrollIntoView({ behavior: "smooth" });
-        }
+    if (validateElements(elements)) {
+        setupElementListeners(elements);
     }
 }
 
+function validateElements(elements) {
+    return elements.encryptionType && elements.inputText && elements.form && 
+           elements.removeFileBtn && elements.clearAllBtn && elements.generateBtn && 
+           elements.copyPasswordBtn && elements.toggleSwitch;
+}
 
+function setupElementListeners(elements) {
+    elements.encryptionType.addEventListener("change", toggleEncryptionOptions);
+    elements.inputText.addEventListener("input", handleInputChange);
+    elements.form.addEventListener("submit", handleSubmit);
+    elements.removeFileBtn.addEventListener("click", removeFile);
+    elements.clearAllBtn.addEventListener("click", clearAll);
+    elements.generateBtn.addEventListener("click", generateRandomPassword);
+    elements.copyPasswordBtn.addEventListener("click", () => copyToClipboard("generated-password", "password-copy-feedback"));
+    elements.copyOutputBtn?.addEventListener("click", () => copyToClipboard("output-text", "output-copy-feedback"));
+    elements.toggleSwitch.addEventListener("change", updateToggleLabels);
 
+    // Add file input change listener
+    const fileInput = document.getElementById("file-input");
+    if (fileInput) {
+        fileInput.addEventListener("change", () => {
+            const removeBtn = document.getElementById("remove-file-btn");
+            if (removeBtn) {
+                removeBtn.style.display = fileInput.files.length > 0 ? "inline-block" : "none";
+            }
+        });
+    }
 
+    setupShareLinkListeners(elements);
+}
+
+function setupShareLinkListeners(elements) {
+    if (elements.copyShareBtn && elements.shareLink) {
+        elements.copyShareBtn.addEventListener("click", () => {
+            const linkText = elements.shareLink.textContent.trim();
+            navigator.clipboard.writeText(linkText).then(() => {
+                const feedback = document.getElementById("shared-link-feedback");
+                if (feedback) {
+                    feedback.style.display = "block";
+                    feedback.classList.add("show");
+                    setTimeout(() => {
+                        feedback.classList.remove("show");
+                        setTimeout(() => {
+                            feedback.style.display = "none";
+                        }, 300);
+                    }, 3000);
+                }
+            });
+        });
+    }
+}
+
+// ===== UI State Management =====
 function toggleEncryptionOptions() {
     const type = document.getElementById("encryption-type").value.trim().toLowerCase();
     const passwordInputWrapper = document.getElementById("password-input");
+    const fileSection = document.querySelector("#encoding-section #file-section");
     const isAdvanced = type.includes("advanced");
 
     if (passwordInputWrapper) {
@@ -77,10 +104,17 @@ function toggleEncryptionOptions() {
         }
     }
 
+    if (fileSection) {
+        if (isAdvanced) {
+            fileSection.classList.remove("hidden");
+        } else {
+            fileSection.classList.add("hidden");
+        }
+    }
+
     updateToggleLabels();
     toggleInputMode();
 }
-
 
 function updateToggleLabels() {
     const type = document.getElementById("encryption-type")?.value;
@@ -112,6 +146,7 @@ function toggleInputMode() {
     removeBtn.style.display = fileSelected ? "inline-block" : "none";
 }
 
+// ===== Form Handling =====
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -133,6 +168,10 @@ async function handleSubmit(event) {
             : decryptFile(fileInput, password);
     }
 
+    await handleTextOperation(encryptionType, operation, password);
+}
+
+async function handleTextOperation(encryptionType, operation, password) {
     const payload = {
         "encryption-type": encryptionType,
         operation: operation,
@@ -153,6 +192,7 @@ async function handleSubmit(event) {
     }
 }
 
+// ===== Utility Functions =====
 function removeFile() {
     const fileInput = document.getElementById("file-input");
     if (fileInput) fileInput.value = "";
@@ -168,19 +208,30 @@ function generateRandomPassword() {
         charset.charAt(Math.floor(Math.random() * charset.length))
     ).join("");
     const passwordField = document.getElementById("generated-password");
-    if (passwordField) passwordField.value = password;
+    if (passwordField) {
+        passwordField.value = password;
+        // Check if we should start Pacman
+        checkForPacman();
+    }
 }
 
 function copyToClipboard(elementId, feedbackId) {
     const el = document.getElementById(elementId);
     const feedback = document.getElementById(feedbackId);
-    if (!el || !feedback) return;
 
-    navigator.clipboard.writeText(el.textContent || el.value || "").then(() => {
-        feedback.classList.add("show");
-        setTimeout(() => {
-            feedback.classList.remove("show");
-        }, 3000);
+    if (!el || !el.value) return;
+
+    navigator.clipboard.writeText(el.value).then(() => {
+        if (feedback) {
+            feedback.style.display = "block";
+            feedback.classList.add("show");
+            setTimeout(() => {
+                feedback.classList.remove("show");
+                setTimeout(() => {
+                    feedback.style.display = "none";
+                }, 300); // Wait for fade-out animation to complete
+            }, 3000);
+        }
     });
 }
 
@@ -194,6 +245,11 @@ function clearAll() {
     toggleInputMode();
     document.getElementById("pacman-section")?.style.setProperty("display", "none");
     document.getElementById("encoding-section")?.style.setProperty("display", "block");
+}
+
+function handleInputChange() {
+    toggleInputMode();
+    checkForPacman();
 }
 
 function checkForPacman() {
@@ -210,6 +266,7 @@ function checkForPacman() {
     }
 }
 
-
 function startPacman() { }
 function exitGame() { }
+
+

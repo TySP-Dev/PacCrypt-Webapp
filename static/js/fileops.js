@@ -1,92 +1,119 @@
-// fileops.js
-
-import { encryptAdvanced, decryptAdvanced } from './encryption.js';
-
 /**
- * Encrypts the selected file and triggers download of the encrypted version.
- * @param {HTMLInputElement} fileInput - The input element of type 'file'.
- * @param {string} password - Password for encryption.
+ * File operations module.
+ * Handles file encryption and decryption operations.
  */
-export function encryptFile(fileInput, password) {
-    if (!fileInput.files.length) {
-        alert("Please select a file!");
-        return;
-    }
 
+// ===== Constants =====
+const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+
+// ===== Public Interface =====
+export async function encryptFile(fileInput, password) {
     const file = fileInput.files[0];
-    const reader = new FileReader();
+    if (!file) return;
 
-    reader.onload = async (e) => {
-        const rawBytes = new Uint8Array(e.target.result);
-        const base64 = btoa(String.fromCharCode(...rawBytes));
-        const encrypted = await encryptAdvanced(base64, password);
-        downloadFile(encrypted, file.name + ".enc");
-    };
-
-    reader.readAsArrayBuffer(file);
+    try {
+        const encryptedChunks = await processFile(file, password, true);
+        downloadEncryptedFile(encryptedChunks, file.name);
+    } catch (error) {
+        alert("Error encrypting file: " + error.message);
+    }
 }
 
-/**
- * Decrypts the selected encrypted file and triggers download of the original.
- * @param {HTMLInputElement} fileInput - The input element of type 'file'.
- * @param {string} password - Password for decryption.
- */
-export function decryptFile(fileInput, password) {
-    if (!fileInput.files.length) {
-        alert("Please select a file!");
-        return;
+export async function decryptFile(fileInput, password) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    try {
+        const decryptedChunks = await processFile(file, password, false);
+        downloadDecryptedFile(decryptedChunks, file.name);
+    } catch (error) {
+        alert("Error decrypting file: " + error.message);
+    }
+}
+
+// ===== File Processing =====
+async function processFile(file, password, isEncrypt) {
+    const chunks = [];
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    let processedChunks = 0;
+
+    for (let start = 0; start < file.size; start += CHUNK_SIZE) {
+        const chunk = file.slice(start, start + CHUNK_SIZE);
+        const arrayBuffer = await chunk.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        const processedChunk = await processChunk(uint8Array, password, isEncrypt);
+        chunks.push(processedChunk);
+        
+        processedChunks++;
+        updateProgress(processedChunks, totalChunks);
     }
 
-    const file = fileInput.files[0];
-    const reader = new FileReader();
+    return chunks;
+}
 
-    reader.onload = async (e) => {
-        try {
-            const encryptedText = e.target.result;
-            const base64Decrypted = await decryptAdvanced(encryptedText, password);
-            const byteArray = new Uint8Array(
-                [...atob(base64Decrypted)].map(c => c.charCodeAt(0))
-            );
-            downloadFileBinary(byteArray, file.name.replace(/\.enc$/, ''));
-        } catch (err) {
-            console.error("[Decryption Error]", err);
-            alert("Decryption failed: wrong password or corrupted file.");
+async function processChunk(data, password, isEncrypt) {
+    const payload = {
+        "encryption-type": "advanced",
+        operation: isEncrypt ? "encrypt" : "decrypt",
+        message: Array.from(data).join(','),
+        password: password
+    };
+
+    const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return new Uint8Array(result.result.split(',').map(Number));
+}
+
+// ===== File Download =====
+function downloadEncryptedFile(chunks, originalName) {
+    const blob = new Blob(chunks, { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = originalName + '.encrypted';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function downloadDecryptedFile(chunks, originalName) {
+    const blob = new Blob(chunks, { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = originalName.replace('.encrypted', '');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ===== Progress Tracking =====
+function updateProgress(processed, total) {
+    const progressBar = document.getElementById("file-progress");
+    const progressText = document.getElementById("file-progress-text");
+    
+    if (progressBar && progressText) {
+        const percent = Math.round((processed / total) * 100);
+        progressBar.style.width = percent + "%";
+        progressText.textContent = `Processing: ${percent}%`;
+        
+        if (processed === total) {
+            setTimeout(() => {
+                progressBar.style.width = "0%";
+                progressText.textContent = "";
+            }, 1000);
         }
-    };
-
-    reader.readAsText(file);
-}
-
-/**
- * Downloads a text-based file (encrypted string).
- * @param {string} content - The file content to download.
- * @param {string} filename - Desired name for the downloaded file.
- */
-function downloadFile(content, filename) {
-    const blob = new Blob([content], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-
-    URL.revokeObjectURL(url);
-}
-
-/**
- * Downloads a binary file (Uint8Array).
- * @param {Uint8Array} byteArray - The binary content.
- * @param {string} filename - Desired name for the downloaded file.
- */
-function downloadFileBinary(byteArray, filename) {
-    const blob = new Blob([byteArray], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-
-    URL.revokeObjectURL(url);
+    }
 }
