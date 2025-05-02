@@ -3,7 +3,7 @@
 **PacCrypt** is a secure, feature-rich web app for encrypting and decrypting text and files — built with Flask, JavaScript, and AES-GCM encryption.  
 Now with an admin control panel, GitHub updater, and a built-in Pac-Man easter egg! 🕹️
 
-Live demo: [paccrypt.unnaturalll.dev](http://paccrypt.unnaturalll.dev)
+Offically Hosted: [paccrypt.unnaturalll.dev](http://paccrypt.unnaturalll.dev)
 
 ---
 
