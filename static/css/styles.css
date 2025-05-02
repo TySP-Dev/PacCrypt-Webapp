@@ -452,6 +452,15 @@ section.card {
     margin-bottom: 25px;
 }
 
+/* Pickup page sections */
+#pickup-section {
+    margin-bottom: 25px;
+}
+
+#security-notice-section {
+    margin-bottom: 25px;
+}
+
 /* ===== File Input Section ===== */
 #encoding-section #file-section {
     display: none;
