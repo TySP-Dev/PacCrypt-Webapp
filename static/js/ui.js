@@ -221,18 +221,47 @@ function copyToClipboard(elementId, feedbackId) {
 
     if (!el || !el.value) return;
 
-    navigator.clipboard.writeText(el.value).then(() => {
-        if (feedback) {
-            feedback.style.display = "block";
-            feedback.classList.add("show");
+    // Create a temporary textarea element
+    const textarea = document.createElement('textarea');
+    textarea.value = el.value;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    
+    // Select and copy the text
+    textarea.select();
+    textarea.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        // Try using the modern clipboard API first
+        navigator.clipboard.writeText(el.value).then(() => {
+            showFeedback(feedback);
+        }).catch(() => {
+            // Fallback to execCommand for older browsers
+            document.execCommand('copy');
+            showFeedback(feedback);
+        });
+    } catch (err) {
+        // Final fallback
+        document.execCommand('copy');
+        showFeedback(feedback);
+    }
+    
+    // Clean up
+    document.body.removeChild(textarea);
+}
+
+function showFeedback(feedback) {
+    if (feedback) {
+        feedback.style.display = "block";
+        feedback.classList.add("show");
+        setTimeout(() => {
+            feedback.classList.remove("show");
             setTimeout(() => {
-                feedback.classList.remove("show");
-                setTimeout(() => {
-                    feedback.style.display = "none";
-                }, 300); // Wait for fade-out animation to complete
-            }, 3000);
-        }
-    });
+                feedback.style.display = "none";
+            }, 300);
+        }, 3000);
+    }
 }
 
 function clearAll() {

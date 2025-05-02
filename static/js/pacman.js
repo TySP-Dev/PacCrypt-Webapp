@@ -21,6 +21,13 @@ export function setupGame() {
 }
 
 export function startPacman() {
+    // Scroll to the Pacman section
+    const pacmanSection = document.getElementById("pacman-section");
+    if (pacmanSection) {
+        pacmanSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize game state
     initializeGame();
     setupGameLoop();
 }
@@ -28,6 +35,11 @@ export function startPacman() {
 export function stopPacman() {
     clearInterval(gameInterval);
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Restore scrolling
+    document.body.style.overflow = '';
+    document.removeEventListener('wheel', preventScroll);
+    document.removeEventListener('touchmove', preventScroll);
 }
 
 export function resetGame() {
@@ -68,6 +80,55 @@ function initializeGame() {
 
     pacman.dx = pacman.dy = 0;
     document.addEventListener("keydown", movePacman);
+    
+    // Prevent scrolling
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    
+    // Add touch controls
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        
+        // Determine swipe direction based on the larger movement
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal swipe
+            if (dx > 0) {
+                pacman.dx = PACMAN_SPEED;
+                pacman.dy = 0;
+            } else {
+                pacman.dx = -PACMAN_SPEED;
+                pacman.dy = 0;
+            }
+        } else {
+            // Vertical swipe
+            if (dy > 0) {
+                pacman.dx = 0;
+                pacman.dy = PACMAN_SPEED;
+            } else {
+                pacman.dx = 0;
+                pacman.dy = -PACMAN_SPEED;
+            }
+        }
+    }, { passive: false });
 }
 
 function setupGameLoop() {
@@ -283,6 +344,20 @@ function eatDots() {
         return true;
     });
 
+    // Check if all dots are eaten
+    if (dots.length === 0) {
+        // Trigger password generator for new random map
+        const generateBtn = document.getElementById("generate-btn");
+        if (generateBtn) {
+            generateBtn.click();
+        }
+        
+        // Auto-restart the game after a short delay
+        setTimeout(() => {
+            resetGame();
+        }, 1000);
+    }
+
     ctx.fillStyle = "white";
     dots.forEach(d => {
         ctx.beginPath();
@@ -294,3 +369,8 @@ function eatDots() {
 // ===== Global Functions =====
 window.resetGame = resetGame;
 window.exitGame = exitGame;
+
+// Add scroll prevention function
+function preventScroll(e) {
+    e.preventDefault();
+}

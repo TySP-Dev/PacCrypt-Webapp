@@ -464,6 +464,8 @@ def restart_server():
             restart_script = f"""
             @echo off
             timeout /t 2 /nobreak
+            taskkill /F /PID {current_pid}
+            set PRODUCTION=true
             start "" "python" "app.py"
             """
             with open("restart.bat", "w") as f:
@@ -477,10 +479,13 @@ def restart_server():
             # Get the current Python interpreter and script path
             python_path = sys.executable
             script_path = os.path.abspath(__file__)
+            current_pid = os.getpid()
             
             # Create a shell script to restart the server
             restart_script = f"""#!/bin/bash
             sleep 2
+            kill -9 {current_pid}
+            export PRODUCTION=true
             {python_path} {script_path}
             """
             
