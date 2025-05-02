@@ -346,7 +346,7 @@ footer {
     display: none;
     opacity: 0;
     text-align: center;
-    max-width: 300px;
+    max-width: 500px;
     margin-left: auto;
     margin-right: auto;
     transition: opacity 0.3s ease;

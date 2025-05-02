@@ -54,8 +54,16 @@ UPLOAD_FOLDER = settings["upload_folder"]
 MAX_FILE_AGE_DAYS = settings["max_file_age_days"]
 MAX_FILE_SIZE_BYTES = settings["max_file_size_bytes"]
 
+# Ensure upload folder exists and has proper permissions
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    try:
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        # Set permissions to 755 (rwxr-xr-x)
+        os.chmod(UPLOAD_FOLDER, 0o755)
+        print(f"[INFO] Created upload directory: {UPLOAD_FOLDER}")
+    except Exception as e:
+        print(f"[ERROR] Failed to create upload directory: {str(e)}")
+        raise
 
 # ===== Cryptographic Functions =====
 def derive_key(password: str, salt: bytes) -> bytes:
@@ -140,18 +148,21 @@ def log_admin_event(message: str):
 # ===== File Management =====
 def cleanup_expired_files():
     """Remove files older than MAX_FILE_AGE_DAYS."""
-    now = datetime.datetime.now(UTC)
-    for fname in os.listdir(UPLOAD_FOLDER):
-        if fname.endswith(".enc") or fname.endswith(".json"):
-            path = os.path.join(UPLOAD_FOLDER, fname)
-            try:
-                file_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), UTC)
-                age = (now - file_time).days
-                if age > MAX_FILE_AGE_DAYS:
-                    os.remove(path)
-                    print(f"[INFO] Deleted expired file: {fname}")
-            except Exception as e:
-                print(f"[ERROR] Could not check/delete file {fname}: {e}")
+    try:
+        now = datetime.datetime.now(UTC)
+        for fname in os.listdir(UPLOAD_FOLDER):
+            if fname.endswith(".enc") or fname.endswith(".json"):
+                path = os.path.join(UPLOAD_FOLDER, fname)
+                try:
+                    file_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), UTC)
+                    age = (now - file_time).days
+                    if age > MAX_FILE_AGE_DAYS:
+                        os.remove(path)
+                        print(f"[INFO] Deleted expired file: {fname}")
+                except Exception as e:
+                    print(f"[ERROR] Could not check/delete file {fname}: {e}")
+    except Exception as e:
+        print(f"[ERROR] Failed to cleanup expired files: {str(e)}")
 
 # ===== Route Handlers =====
 @app.route("/", methods=["GET", "POST"])
@@ -415,11 +426,20 @@ def admin_page():
             uptime_str = "Unavailable"
     else:
         try:
-            # Linux uptime using uptime command
-            uptime_str = subprocess.check_output("uptime -p", shell=True).decode().strip()
-        except Exception as e:
-            print(f"[ERROR] Failed to get Linux uptime: {str(e)}")
-            uptime_str = "Unavailable"
+            # Try reading from /proc/uptime first
+            with open('/proc/uptime', 'r') as f:
+                uptime_seconds = float(f.readline().split()[0])
+                days = int(uptime_seconds // 86400)
+                hours = int((uptime_seconds % 86400) // 3600)
+                minutes = int((uptime_seconds % 3600) // 60)
+                uptime_str = f"{days} days, {hours} hours, {minutes} minutes"
+        except Exception:
+            try:
+                # Fallback to uptime command if /proc/uptime fails
+                uptime_str = subprocess.check_output("uptime -p", shell=True).decode().strip()
+            except Exception as e:
+                print(f"[ERROR] Failed to get Linux uptime: {str(e)}")
+                uptime_str = "Unavailable"
 
     server_info = {
         "uptime": uptime_str,
@@ -553,24 +573,80 @@ def admin_update_server():
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
-        repo_dir = os.path.abspath(os.path.dirname(__file__))
+        # Get the absolute path of the current directory
+        current_dir = os.path.abspath(os.path.dirname(__file__))
         
-        # Check if we're in a git repository
-        if not os.path.exists(os.path.join(repo_dir, ".git")):
-            return jsonify({"error": "Not a git repository"}), 400
+        # Try to find git executable
+        git_paths = [
+            "/usr/bin/git",  # Standard Debian path
+            "/usr/local/bin/git",
+            "/bin/git",
+            "git"  # Fallback to PATH
+        ]
+        
+        git_cmd = None
+        for path in git_paths:
+            if os.path.exists(path) or path == "git":
+                try:
+                    # Test if git is executable
+                    subprocess.run([path, "--version"], check=True, capture_output=True)
+                    git_cmd = path
+                    break
+                except Exception:
+                    continue
 
-        # Execute git commands
-        subprocess.run(["git", "fetch"], cwd=repo_dir, check=True)
-        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=repo_dir, check=True)
-        subprocess.run(["git", "pull"], cwd=repo_dir, check=True)
+        if not git_cmd:
+            return jsonify({"error": "Git executable not found. Please ensure git is installed and accessible."}), 500
 
-        return jsonify({"message": "Server updated successfully from GitHub!"}), 200
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Git operation failed: {str(e)}")
-        return jsonify({"error": f"Git operation failed: {str(e)}"}), 500
+        # Try to find the git repository by checking parent directories
+        repo_dir = current_dir
+        max_depth = 5  # Limit how far up we'll look
+        found_git = False
+        
+        for _ in range(max_depth):
+            git_dir = os.path.join(repo_dir, ".git")
+            if os.path.exists(git_dir):
+                found_git = True
+                break
+            parent_dir = os.path.dirname(repo_dir)
+            if parent_dir == repo_dir:  # We've reached the root directory
+                break
+            repo_dir = parent_dir
+
+        if not found_git:
+            return jsonify({
+                "error": "Git repository not found. Current directory: " + current_dir,
+                "details": "Please ensure the application is running from within the git repository directory."
+            }), 400
+
+        # Execute git commands with proper error handling
+        try:
+            # Fetch latest changes
+            fetch_result = subprocess.run([git_cmd, "fetch"], cwd=repo_dir, check=True, capture_output=True, text=True)
+            
+            # Reset to origin/main
+            reset_result = subprocess.run([git_cmd, "reset", "--hard", "origin/main"], cwd=repo_dir, check=True, capture_output=True, text=True)
+            
+            # Pull latest changes
+            pull_result = subprocess.run([git_cmd, "pull"], cwd=repo_dir, check=True, capture_output=True, text=True)
+            
+            return jsonify({
+                "message": "Server updated successfully from GitHub!",
+                "details": {
+                    "fetch": fetch_result.stdout,
+                    "reset": reset_result.stdout,
+                    "pull": pull_result.stdout
+                }
+            }), 200
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Git operation failed: {e.stderr if e.stderr else e.stdout}"
+            print(f"[ERROR] {error_msg}")
+            return jsonify({"error": error_msg}), 500
+
     except Exception as e:
-        print(f"[ERROR] Update failed: {str(e)}")
-        return jsonify({"error": f"Update failed: {str(e)}"}), 500
+        error_msg = f"Update failed: {str(e)}"
+        print(f"[ERROR] {error_msg}")
+        return jsonify({"error": error_msg}), 500
 
 # ===== Sitemap and Robots =====
 @app.route("/sitemap", methods=["GET"])
