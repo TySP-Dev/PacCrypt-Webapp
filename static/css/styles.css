@@ -7,9 +7,11 @@
 
 /* ===== Body ===== */
 body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #121212;
-    color: #00ff99;
+    font-family: 'Press Start 2P', monospace;
+    background-color: #0e0e0e;
+    color: #28E060;
+    font-size: 13px;
+    line-height: 1.6;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -18,27 +20,111 @@ body {
     padding: 20px;
 }
 
+@media (max-width: 600px) {
+    body {
+        font-size: 11px;
+        padding: 10px;
+    }
+
+    .button-group {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+    }
+  
+    .button-group button {
+      width: 100%;
+      min-width: unset;
+      max-width: 100%;
+    }
+
+    header {
+      flex-direction: column;
+      height: auto;
+      padding-inline: 15px;
+      padding-block: 20px;
+    }
+  
+    .logo-container {
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+  
+    .logo-container img {
+      height: 100px !important;
+      margin-top: -15px !important;
+    }
+  
+    .logo-text {
+      margin-left: 0 !important;
+      text-align: center;
+    }
+  
+    .logo-text h1 {
+      font-size: 1.4em;
+      margin-top: -30px !important;
+      margin-left: 0 !important;
+      text-align: center !important;
+    }
+  
+    .logo-text p {
+      font-size: 0.8em;
+      margin-left: 0 !important;
+      text-align: center !important;
+    }
+    
+    .admin-button-grid {
+        grid-template-columns: 1fr;
+    }
+}
+  
+  
+
 /* ===== Header ===== */
 header {
-    text-align: center;
-    padding: 25px;
-    background-color: #1c1c1c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #111;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 15px #28E060;
     width: 100%;
     max-width: 800px;
-    margin-bottom: 40px !important;
+    margin-bottom: 25px;
+    padding: 25px;
+    height: 200px;
 }
 
-    header h1 {
-        font-size: 2.8em;
-        color: #00ff99;
-        margin-bottom: 8px;
-    }
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* optional: controls spacing between logo and text */
+}
 
-    header p {
-        font-size: 1.2em;
-    }
+.logo-container img {
+    height: 200px;
+    width: auto;
+}
+
+.logo-text h1 {
+    font-size: clamp(1.4em, 6vw, 2.8em);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    color: #28E060;
+    margin: 0;
+    margin-left: -30px; /* overlap effect */
+    text-align: left;
+}
+
+.logo-text p {
+    font-size: 1.2em;
+    color: #28E060;
+    margin: 0;
+    margin-left: -30px;
+    text-align: left;
+}
+
 
 /* ===== Main Layout ===== */
 main {
@@ -58,7 +144,7 @@ main {
     padding: 25px;
     width: 100%;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 15px #28E060;
     text-align: center;
 }
 
@@ -73,18 +159,27 @@ main {
 }
 
 /* ===== Inputs, Textareas, Selects ===== */
+button,
+select,
+input,
+textarea {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
+}
+
 input,
 textarea,
 select,
 input[type="file"] {
     width: 80%;
     max-width: 500px;
-    padding: 12px 20px;
-    border: 1px solid #00ff99;
+    padding-inline: 20px;
+    padding-block: 12px;    
+    border: 1px solid #28E060;
     border-radius: 8px;
     background-color: #2c2f33;
-    color: #00ff99;
-    font-size: 1em;
+    color: #28E060;
     text-align: left;
     transition: 0.3s;
 }
@@ -102,31 +197,41 @@ input[type="password"] {
     min-height: 50px;
 }
 
+/* ===== File Input Customization ===== */
 input[type="file"] {
-    border: 2px dashed #00ff99;
+    border: 2px dashed #28E060;
     cursor: pointer;
+    color: #28E060;
+    background-color: #2c2f33;
 }
 
-    input[type="file"]::file-selector-button {
-        background-color: #00ff99;
-        color: #121212;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+input[type="file"]::file-selector-button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    background-color: #2c2f33;
+    color: #28E060;
+    border: 2px solid #28E060;
+    padding-inline: 10px;
+    padding-block: 8px;
+    margin-right: 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
 
-        input[type="file"]::file-selector-button:hover {
-            background-color: #00cc77;
-        }
+input[type="file"]::file-selector-button:hover {
+    background-color: #28E060;
+    color: #000;
+    box-shadow: 0 0 10px #28E060;
+}
 
 /* ===== Focus Effects ===== */
 input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    box-shadow: 0 0 10px rgba(0, 255, 153, 0.8);
+    box-shadow: 0 0 10px #28E060;
 }
 
 /* ===== Textareas Specific Widths ===== */
@@ -147,37 +252,126 @@ select:focus {
 }
 
 button {
-    padding: 10px 20px;
-    border: 0px solid #00ff99;
+    padding-inline: 20px;
+    padding-block: 10px;
+    border: none;
     border-radius: 8px;
     background-color: #2c2f33;
-    color: #00ff99;
+    color: #28E060;
     font-size: 1em;
     cursor: pointer;
     transition: 0.3s;
     width: auto;
     min-width: 225px;
     max-width: 300px;
+    height: 45px;
 }
 
     button:hover {
-        background-color: #00ff99;
+        background-color: #28E060;
         color: #121212;
-        box-shadow: 0 0 10px rgba(0, 255, 153, 0.4);
+        box-shadow: 0 0 10px #28E060;
     }
 
 .danger-button {
     background-color: #5f3131;
-    box-shadow: 0 0 20px rgba(185, 0, 0, 0.4);
+    box-shadow: 0 0 10px #991717;
 }
 
 .danger-button:hover {
-    background-color: #ff0000;
+    background-color: #af0000;
     color: #121212;
-    box-shadow: 0 0 40px rgb(255, 0, 0);
+    box-shadow: 0 0 40px #ff0000;
 }
 
+.admin-button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacer); /* e.g., 20px between rows and columns */
+    justify-items: center;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  
+  .admin-button-grid button {
+    width: 100%;
+    max-width: 280px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+  }
+  
+  
+
 /* ===== Toggle Switch Styling ===== */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .toggle-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: #28E060;
+  }
+  
+  .material-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+  
+  .material-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .material-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #222;
+    border: 2px solid #28E060;
+    border-radius: 34px;
+    transition: 0.4s;
+    margin: unset; 
+  }
+  
+  .material-slider::before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #28E060;
+    border-radius: 50%;
+    transition: 0.4s;
+    box-shadow: 0 0 6px #28E060;
+  }
+  
+  .material-switch input:checked + .material-slider {
+    background-color: #28E060;
+  }
+  
+  .material-switch input:checked + .material-slider::before {
+    transform: translateX(26px);
+    background-color: #000;
+  }
+  
+  
+  /* Label beside switch */
+  #toggle-label {
+    font-family: 'Press Start 2P', monospace;
+    color: #28E060;
+    margin-left: 20px;
+    font-size: 12px;
+  }
+
 .toggle-container {
     display: flex;
     align-items: center;
@@ -211,7 +405,7 @@ button {
     right: 0;
     bottom: 0;
     background-color: #2c2f33;
-    border: 2px solid #00ff99;
+    border: 2px solid #28E060;
     border-radius: 34px;
     transition: .4s;
     display: flex;
@@ -223,7 +417,7 @@ button {
         content: "";
         height: 22px;
         width: 22px;
-        background-color: #00ff99;
+        background-color: #28E060;
         border-radius: 50%;
         transition: .4s;
         transform: translateX(2px);
@@ -243,7 +437,7 @@ input:checked + .slider::before {
     display: flex;
     justify-content: space-between;
     font-size: 0.9em;
-    color: #00ff99;
+    color: #28E060;
     margin-top: 5px;
 }
 
@@ -265,7 +459,7 @@ input:checked + .slider::before {
     max-width: 500px;
     min-height: 50px;
     background-color: #333;
-    color: #00ff99;
+    color: #28E060;
     text-align: center;
     border-radius: 8px;
     padding: 14px;
@@ -306,16 +500,16 @@ footer {
     text-align: center;
     padding: 25px;
     background-color: #1c1c1c;
-    color: #00ff99;
+    color: #28E060;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 15px #28E060;
     width: 100%;
     max-width: 800px;
-    margin-top: 40px;
+    margin-top: 25px;
 }
 
     footer a {
-        color: #00ff99;
+        color: #28E060;
         text-decoration: none;
     }
 
@@ -338,10 +532,11 @@ footer {
 /* ===== Copy Feedback Message ===== */
 .copy-feedback, #shared-link-feedback {
     background-color: #2c2f33;
-    padding: 6px 12px;
+    padding-inline: 12px;
+    padding-block: 6px;
     margin-top: 6px;
     border-radius: 6px;
-    color: #00ff99;
+    color: #28E060;
     font-size: 0.9em;
     display: none;
     opacity: 0;
@@ -369,9 +564,10 @@ footer {
 #share-link {
     display: block;
     background-color: #2c2f33;
-    padding: 8px 16px;
+    padding-inline: 16px;
+    padding-block: 8px;
     border-radius: 6px;
-    color: #00ff99;
+    color: #28E060;
     font-size: 0.9em;
     text-align: center;
     max-width: 720px;
@@ -395,6 +591,7 @@ form {
 }
 
 form input {
+    min-height: 50px;
     width: 80%;
     max-width: 500px;
     text-align: left;
@@ -411,7 +608,7 @@ section.card {
 #pacmanCanvas {
     background-color: black;
     display: block;
-    border: 2px solid #00ff99;
+    border: 2px solid #28E060;
     border-radius: 12px;
     max-width: 700px;
     width: 100%;
@@ -533,7 +730,7 @@ section.card {
     padding: 25px;
     background-color: #1e1e1e;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 15px #28E060;
 }
 
 .sitemap-header {
@@ -544,17 +741,18 @@ section.card {
 }
 
 .sitemap-header h3 {
-    color: #00ff99;
+    color: #28E060;
     margin: 0;
 }
 
 .collapse-btn {
     background: none;
     border: none;
-    color: #00ff99;
+    color: #28E060;
     font-size: 1.2em;
     cursor: pointer;
-    padding: 5px 10px;
+    padding-inline: 10px;
+    padding-block: 5px;
     transition: transform 0.3s ease;
 }
 
@@ -580,7 +778,7 @@ section.card {
     padding: 8px;
     background-color: #2c2f33;
     border-radius: 6px;
-    color: #00ff99;
+    color: #28E060;
 }
 
 #server-logs-section button {
@@ -590,14 +788,14 @@ section.card {
 }
 
 #logLoader {
-    color: #00ff99;
+    color: #28E060;
     text-align: center;
     padding: 10px;
 }
 
 #logContainer {
     background-color: #2c2f33;
-    color: #00ff99;
+    color: #28E060;
     padding: 15px;
     border-radius: 8px;
     max-height: 400px;
@@ -611,7 +809,7 @@ section.card {
     padding: 25px;
     background-color: #1e1e1e;
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 15px #28E060;
 }
 
 /* ===== Mobile Responsive Adjustments ===== */

@@ -10,25 +10,30 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
     
     <!-- Stylesheets -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt</h1>
-        <p>Encrypt and share your text or files securely</p>
-    </header>
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Securely Share Text and Files</p>
+          </div>
+        </div>
+      </header> 
 
     <!-- Main Content -->
     <main>
         <section class="card form-group" style="padding: 50px 30px;">
-            <h2 style="color: #ff0066; font-size: 2.5em;">❓ 404 - Not Found</h2>
+            <h2 style="color: #ff0066; font-size: 2.5em;">404 - Not Found</h2>
             <p class="mt-4" style="font-size: 1.2em; color: #cccccc;">
-                Whoops! That page doesn't seem to exist. Maybe it got encrypted? 🧩🔐
+                Whoops! That page doesn't seem to exist. Maybe it got encrypted?
             </p>
 
             <!-- Navigation -->

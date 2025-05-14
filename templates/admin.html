@@ -10,24 +10,30 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
     
     <!-- Stylesheets -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
+
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt Admin Panel</h1>
-        <p>Site Overview & Controls</p>
-    </header>
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>ADMIN PANEL</p>
+          </div>
+        </div>
+      </header>  
 
     <!-- Main Content -->
     <main>
         <!-- Site Map Section -->
         <section id="sitemap-section" class="card form-group">
-            <h2>💾 Server Management</h2>
+            <h2>Server Management</h2>
             
             <div class="sitemap-header">
                 <button onclick="toggleSitemap()" style="margin-bottom: 10px;">Show Site Map</button>
@@ -36,32 +42,25 @@
             <div id="sitemap-list" class="sitemap-content" style="display: none;">
                 <ul style="list-style: none; padding-left: 0;">
                     {% for route in routes %}
-                    <li style="margin-bottom: 5px;">🔗 <code>{{ route }}</code></li>
+                    <li style="margin-bottom: 5px;"><code>{{ route }}</code></li>
                     {% endfor %}
                 </ul>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="button-group">
-                <button onclick="restartServer()">🔁 Restart Server</button>
-                <a href="{{ url_for('admin_logout') }}">
-                    <button type="button">🚪 Log Out</button>
-                </a>
+<!-- Server Management Buttons -->
+            <div class="admin-button-grid">
+                <button onclick="restartServer()">Restart Server</button>
+                <form action="{{ url_for('admin_logout') }}" method="GET" style="display: inline;">
+                    <button type="submit">Log Out</button>
+                </form>
+                <button onclick="updateServer()">Pull Latest Changes</button>
+                <form action="{{ url_for('admin_settings') }}" method="GET" style="display: inline;">
+                    <button type="submit">Manage Upload Settings</button>
+                </form>
+                <button onclick="resetAdmin()" class="danger-button">Reset Admin</button>
+                <button onclick="clearUploads()" class="danger-button">Clear Uploaded Files</button>
             </div>
-
-            <!-- Update and Settings Buttons -->
-            <div class="button-group">
-                <button onclick="updateServer()">🔁 Pull Latest Changes</button>
-                <a href="{{ url_for('admin_settings') }}">
-                    <button type="button">🛠️ Manage Upload Settings</button>
-                </a>
-            </div>
-
-            <!-- Admin Reset and Clear Uploads Buttons -->
-            <div class="button-group">    
-                <button onclick="resetAdmin()" class="danger-button">⚠️ Reset Admin</button>
-                <button onclick="clearUploads()" class="danger-button">🗑 Clear Uploaded Files</button>
-            </div>
+  
 
             <!-- Flash Messages -->
             <div id="admin-feedback" class="copy-feedback" style="display: none;"></div>
@@ -69,7 +68,7 @@
 
         <!-- Password Change Section -->
         <section id="password-change-section" class="card form-group">
-            <h2>🔑 Change Admin Password</h2>
+            <h2>Change Admin Password</h2>
 
             <!-- Password Feedback -->
             {% with messages = get_flashed_messages(with_categories=true, category_filter=['password-feedback']) %}
@@ -88,19 +87,19 @@
 
         <!-- Server Status Section -->
         <section id="server-status-section" class="card form-group">
-            <h2>📊 Server Status</h2>
-            <ul style="list-style: none; padding-left: 0;">
-                <li>🕒 Uptime: <code>{{ server_info.uptime }}</code></li>
-                <li>📅 Server Time: <code>{{ server_info.time }}</code></li>
-                <li>🐍 Python Version: <code>{{ server_info.python }}</code></li>
-                <li>⚙️ Flask Debug Mode: <code>{{ server_info.debug }}</code></li>
+            <h2>Server Status</h2>
+            <ul style="width: 400px;">
+                <li>Uptime: <code>0 days, 11 hours, 47 minutes</code></li>
+                <li>Server Time: <code>2025-05-14 14:32:18</code></li>
+                <li>Python Version: <code>3.13.3</code></li>
+                <li>Flask Debug Mode: <code>True</code></li>
             </ul>
         </section>
 
         <!-- Server Logs Section -->
         <section id="server-logs-section" class="card form-group">
-            <h2>📜 Server Logs</h2>
-            <button onclick="toggleLogs()" style="margin-bottom: 10px;">🔽 Show/Hide Logs</button>
+            <h2>Server Logs</h2>
+            <button onclick="toggleLogs()" style="margin-bottom: 10px;">Show/Hide Logs</button>
             <div id="logLoader" style="display: none; margin-bottom: 10px;">Loading logs...</div>
             <pre id="logContainer" style="display: none;"></pre>
         </section>
@@ -123,10 +122,10 @@
         const logLoader = document.getElementById('logLoader');
         if (logContainer.style.display === 'none') {
             logLoader.style.display = 'block';
-            const response = await fetch('{{ url_for('admin_logs') }}');
+            const response = await fetch("{{ url_for('admin_logs') }}");
             const data = await response.json();
             logLoader.style.display = 'none';
-            logContainer.innerText = data.logs.join('\\n');
+            logContainer.innerText = data.logs.join('\n');
             logContainer.style.display = 'block';
         } else {
             logContainer.style.display = 'none';

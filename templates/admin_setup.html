@@ -4,30 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PacCrypt - Admin Setup" />
-    <title>Admin Setup - PacCrypt</title>
+    <title>PacCrypt - Admin Setup</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
     
     <!-- Stylesheets -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt Admin</h1>
-        <p>Admin Setup</p>
-    </header>
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Admin Setup</p>
+          </div>
+        </div>
+      </header>  
 
     <!-- Main Content -->
     <main>
         <!-- Setup Form Section -->
         <section class="card form-group">
-            <h2>🛡️ Create Admin Account</h2>
+            <h2>Create Admin Account</h2>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -41,7 +46,7 @@
                 <input type="text" name="username" placeholder="Username" required />
                 <input type="password" name="password" placeholder="Password" required />
                 <div class="button-group mt-3">
-                    <button type="submit">📝 Set Credentials</button>
+                    <button type="submit">Set Credentials</button>
                 </div>
             </form>
         </section>

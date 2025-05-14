@@ -226,7 +226,7 @@ server {
 ## 🗂️ Project Structure
 
 ```
-paccrypt-webapp-final/
+PacCrypt/
 ├── app.py
 ├── requirements.txt
 ├── README.md

@@ -4,35 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="PacCrypt - Secure text and file encryption with password generation" />
-    <title>PacCrypt - Encrypt and share your text or files securely</title>
+    <title>PacCrypt</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='img/PacCrypt.png') }}" type="image/png" />
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt</h1>
-        <p>Encrypt and share your text or files securely</p>
-    </header>
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Securely Share Text and Files</p>
+          </div>
+        </div>
+      </header>  
 
     <!-- Main Content -->
     <main>
         <!-- Password Generator Section -->
         <section id="password-generator-section" class="card form-group">
-            <h2>🔑 Password Generator</h2>
+            <h2>Password Generator</h2>
             <div class="form-group">
                 <input type="text" id="generated-password" readonly />
                 <div class="button-group">
-                    <button type="button" id="generate-btn">🎲 Generate</button>
-                    <button type="button" id="copy-btn">📋 Copy Password</button>
+                    <button type="button" id="generate-btn">Generate</button>
+                    <button type="button" id="copy-btn">Copy Password</button>
                 </div>
                 <div id="password-copy-feedback" class="copy-feedback">Password copied to clipboard!</div>
             </div>
@@ -52,7 +57,7 @@
 
         <!-- Encryption/Decryption Section -->
         <section id="encoding-section" class="card form-group">
-            <h2>🔐 Encrypt & Decrypt</h2>
+            <h2>Encrypt & Decrypt</h2>
             <form id="crypto-form" class="form-group">
                 <!-- Encryption Type Selection -->
                 <div class="form-group">
@@ -65,13 +70,14 @@
 
                 <!-- Operation Toggle -->
                 <div class="toggle-container">
-                    <span id="toggle-left-label">Encrypt</span>
-                    <label class="switch">
-                        <input type="checkbox" id="operation-toggle" />
-                        <span class="slider round"></span>
+                    <span class="toggle-label">Encrypt</span>
+                    <label class="material-switch">
+                      <input type="checkbox" id="operation-toggle">
+                      <span class="material-slider"></span>
                     </label>
-                    <span id="toggle-right-label">Decrypt</span>
-                </div>
+                    <span class="toggle-label">Decrypt</span>
+                  </div>
+                                 
 
                 <!-- Text Input Section -->
                 <div id="text-section" class="form-group">
@@ -86,19 +92,19 @@
                 <!-- File Input Section -->
                 <div id="file-section" class="form-group" style="display: none;">
                     <input type="file" id="file-input" />
-                    <button type="button" id="remove-file-btn">🗑 Remove File</button>
+                    <button type="button" id="remove-file-btn">Remove File</button>
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="button-group">
-                    <button type="submit">⚡ Execute</button>
-                    <button type="button" id="copy-output-btn">📋 Copy Output</button>
+                    <button type="submit">Execute</button>
+                    <button type="button" id="copy-output-btn">Copy Output</button>
                 </div>
 
                 <!-- Output Section -->
-                <textarea id="output-text" readonly placeholder="Encrypted/Decrypted text will appear here..."></textarea>
+                <textarea id="output-text" readonly placeholder="Encrypted/Decrypted Output"></textarea>
                 <div class="button-group">
-                    <button type="button" id="clear-all-btn" class="danger-button">🧹 Clear All</button>
+                    <button type="button" id="clear-all-btn" class="danger-button">Clear All</button>
                 </div>
                 <div id="output-copy-feedback" class="copy-feedback">Text copied to clipboard!</div>
             </form>
@@ -106,7 +112,7 @@
 
         <!-- File Sharing Section -->
         <section id="sharing-section" class="card form-group">
-            <h2>📤 PacCrypt Share</h2>
+            <h2>PacCrypt Share</h2>
             <h3>Securely share encrypted files.</h3>
             <p>Do not lose your passwords, data will be lost forever!</p>
 
@@ -121,7 +127,7 @@
                     <div class="share-link-container">
                         <a id="share-link" href="{{ message.split(' at ')[1] }}" target="_blank">{{ message.split(" at ")[1] }}</a>
                         <!--- <span id="share-link">{{ message.split(" at ")[1] }}</span> --->
-                        <button type="button" id="copy-share-btn">📋 Copy Link</button>
+                        <button type="button" id="copy-share-btn">Copy Link</button>
                         <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
                     </div>
                     {% endif %}
@@ -136,7 +142,7 @@
             <!-- Share Link Container (initially hidden) -->
             <div class="share-link-container" id="share-link-container" style="display: none;">
                 <a id="share-link" href="#" target="_blank"></a>
-                <button type="button" id="copy-share-btn">📋 Copy Link</button>
+                <button type="button" id="copy-share-btn">Copy Link</button>
                 <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
             </div>
             <form method="POST" enctype="multipart/form-data" class="form-group" id="upload-form">
@@ -144,7 +150,7 @@
                 <input type="password" name="enc_password" placeholder="Encryption/Decryption Password" required />
                 <input type="password" name="pickup_password" placeholder="Pickup Password" required />
                 <div class="button-group">
-                    <button type="submit">🔒 Upload and Generate Link</button>
+                    <button type="submit">Upload and Generate Link</button>
                 </div>
             </form>
 

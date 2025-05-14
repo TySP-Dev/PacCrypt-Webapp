@@ -52,7 +52,11 @@ function setupElementListeners(elements) {
     elements.generateBtn.addEventListener("click", generateRandomPassword);
     elements.copyPasswordBtn.addEventListener("click", () => copyToClipboard("generated-password", "password-copy-feedback"));
     elements.copyOutputBtn?.addEventListener("click", () => copyToClipboard("output-text", "output-copy-feedback"));
-    elements.toggleSwitch.addEventListener("change", updateToggleLabels);
+    elements.toggleSwitch.addEventListener("change", () => {
+        console.log("Mode:", elements.toggleSwitch.checked ? "Decrypt" : "Encrypt");
+    });
+    
+      
 
     // Add file input change listener
     const fileInput = document.getElementById("file-input");
