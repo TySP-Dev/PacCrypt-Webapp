@@ -53,12 +53,12 @@
                 <form action="{{ url_for('admin_logout') }}" method="GET" style="display: inline;">
                     <button type="submit">Log Out</button>
                 </form>
-                <button onclick="updateServer()">Pull Latest Changes</button>
+                <button onclick="updateServer()">Update Server</button>
                 <form action="{{ url_for('admin_settings') }}" method="GET" style="display: inline;">
-                    <button type="submit">Manage Upload Settings</button>
+                    <button type="submit">Settings</button>
                 </form>
                 <button onclick="resetAdmin()" class="danger-button">Reset Admin</button>
-                <button onclick="clearUploads()" class="danger-button">Clear Uploaded Files</button>
+                <button onclick="clearUploads()" class="danger-button">Clear PacShare</button>
             </div>
   
 
@@ -88,13 +88,14 @@
         <!-- Server Status Section -->
         <section id="server-status-section" class="card form-group">
             <h2>Server Status</h2>
-            <ul style="width: 400px;">
-                <li>Uptime: <code>0 days, 11 hours, 47 minutes</code></li>
-                <li>Server Time: <code>2025-05-14 14:32:18</code></li>
-                <li>Python Version: <code>3.13.3</code></li>
-                <li>Flask Debug Mode: <code>True</code></li>
+            <ul class="status-list">
+                <li>Uptime: <code>{{ server_info.uptime }}</code></li>
+                <li>Server Time: <code>{{ server_info.server_time }}</code></li>
+                <li>Python Version: <code>{{ server_info.python_version }}</code></li>
+                <li>Flask Debug Mode: <code>{{ server_info.debug_mode }}</code></li>
             </ul>
         </section>
+
 
         <!-- Server Logs Section -->
         <section id="server-logs-section" class="card form-group">

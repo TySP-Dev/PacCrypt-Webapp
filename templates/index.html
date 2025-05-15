@@ -49,7 +49,7 @@
                 <canvas id="pacmanCanvas" width="800" height="600"></canvas>
             </div>
             <audio id="chomp-sound" src="{{ url_for('static', filename='audio/chomp.mp3') }}"></audio>
-            <div class="button-group">
+            <div class="button-group" style="margin-top: 6px;">
                 <button type="button" onclick="resetGame()">Restart Game</button>
                 <button type="button" onclick="exitGame()">Exit Game</button>
             </div>
@@ -112,9 +112,8 @@
 
         <!-- File Sharing Section -->
         <section id="sharing-section" class="card form-group">
-            <h2>PacCrypt Share</h2>
-            <h3>Securely share encrypted files.</h3>
-            <p>Do not lose your passwords, data will be lost forever!</p>
+            <h2 style="margin-bottom: unset;">PacShare</h2>
+            <p style="margin-top: unset;">Securely share encrypted files.</p>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -126,8 +125,7 @@
                     {% if "pickup" in message %}
                     <div class="share-link-container">
                         <a id="share-link" href="{{ message.split(' at ')[1] }}" target="_blank">{{ message.split(" at ")[1] }}</a>
-                        <!--- <span id="share-link">{{ message.split(" at ")[1] }}</span> --->
-                        <button type="button" id="copy-share-btn">Copy Link</button>
+                        <button type="button" onclick="copyShareLink()">Copy Link</button>
                         <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
                     </div>
                     {% endif %}
@@ -137,6 +135,7 @@
             <script>window.onload = () => window.scrollTo(0, document.body.scrollHeight);</script>
             {% endif %}
             {% endwith %}
+
 
             <!-- File Upload Form -->
             <!-- Share Link Container (initially hidden) -->
@@ -153,7 +152,7 @@
                     <button type="submit">Upload and Generate Link</button>
                 </div>
             </form>
-
+            <p style="color: #9c0000;">BOTH PASSWORDS ARE REQUIRED FOR PICKUP</p>
             <script>
                 document.getElementById('upload-form').addEventListener('submit', async (e) => {
                     e.preventDefault();

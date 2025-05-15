@@ -298,6 +298,54 @@ function checkForPacman() {
         window.exitGame();
     }
 }
+function copyShareLink() {
+    const linkEl = document.getElementById("share-link");
+    const feedback = document.getElementById("shared-link-feedback");
+
+    if (!linkEl) return;
+
+    const linkText = linkEl.href || linkEl.textContent.trim();
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(linkText).then(() => {
+            showCopyFeedback(feedback);
+        }).catch(() => {
+            fallbackCopy(linkText, feedback);
+        });
+    } else {
+        fallbackCopy(linkText, feedback);
+    }
+}
+
+function fallbackCopy(text, feedbackEl) {
+    const tempInput = document.createElement("input");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+
+    try {
+        document.execCommand("copy");
+        showCopyFeedback(feedbackEl);
+    } catch (err) {
+        alert("Copy failed. Please copy manually.");
+    }
+
+    document.body.removeChild(tempInput);
+}
+
+function showCopyFeedback(feedbackEl) {
+    if (!feedbackEl) return;
+    feedbackEl.style.display = "block";
+    feedbackEl.classList.add("show");
+
+    setTimeout(() => {
+        feedbackEl.classList.remove("show");
+        setTimeout(() => {
+            feedbackEl.style.display = "none";
+        }, 300);
+    }, 3000);
+}
+
 
 function startPacman() { }
 function exitGame() { }

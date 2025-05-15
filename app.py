@@ -6,11 +6,11 @@ import html
 import base64
 import hashlib
 import secrets
-import datetime
 import subprocess
 import platform
-from datetime import UTC
+from datetime import datetime, timedelta
 import sys
+import psutil
 
 # ===== Third-Party Imports =====
 from flask import (
@@ -138,7 +138,7 @@ def log_admin_event(message: str):
     try:
         key = load_admin_key()
         cipher = Fernet(key)
-        timestamp = datetime.datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         encrypted = cipher.encrypt(f"[{timestamp}] {message}".encode())
         with open(ADMIN_LOG_FILE, 'ab') as f:
             f.write(encrypted + b"\n")
@@ -149,12 +149,12 @@ def log_admin_event(message: str):
 def cleanup_expired_files():
     """Remove files older than MAX_FILE_AGE_DAYS."""
     try:
-        now = datetime.datetime.now(UTC)
+        now = datetime.now()
         for fname in os.listdir(UPLOAD_FOLDER):
             if fname.endswith(".enc") or fname.endswith(".json"):
                 path = os.path.join(UPLOAD_FOLDER, fname)
                 try:
-                    file_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), UTC)
+                    file_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), )
                     age = (now - file_time).days
                     if age > MAX_FILE_AGE_DAYS:
                         os.remove(path)
@@ -208,7 +208,7 @@ def handle_file_upload(request):
     meta = {
         'pickup_password': base64.urlsafe_b64encode(hashlib.sha256(pickup_password.encode()).digest()).decode(),
         'original_name': filename,
-        'timestamp': datetime.datetime.now(UTC).isoformat()
+        'timestamp': datetime.datetime.now().isoformat()
     }
     with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.json"), 'w') as f:
         json.dump(meta, f)
@@ -408,47 +408,29 @@ def admin_page():
     cleanup_expired_files()
     routes = [rule.rule for rule in app.url_map.iter_rules() if rule.endpoint != 'static']
 
-    # Get uptime based on OS
-    if platform.system() == "Windows":
-        try:
-            # Windows uptime using PowerShell
-            ps_command = "(Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime"
-            uptime_output = subprocess.check_output(["powershell", "-Command", ps_command], shell=True).decode()
-            # Convert the PowerShell DateTime to Python datetime
-            boot_time = datetime.datetime.strptime(uptime_output.strip(), "%A, %B %d, %Y %I:%M:%S %p")
-            # Make boot_time timezone-aware (assuming local time)
-            boot_time = boot_time.replace(tzinfo=datetime.timezone.utc)
-            current_time = datetime.datetime.now(UTC)
-            uptime = current_time - boot_time
-            uptime_str = f"{uptime.days} days, {uptime.seconds // 3600} hours, {(uptime.seconds % 3600) // 60} minutes"
-        except Exception as e:
-            print(f"[ERROR] Failed to get Windows uptime: {str(e)}")
-            uptime_str = "Unavailable"
-    else:
-        try:
-            # Try reading from /proc/uptime first
-            with open('/proc/uptime', 'r') as f:
-                uptime_seconds = float(f.readline().split()[0])
-                days = int(uptime_seconds // 86400)
-                hours = int((uptime_seconds % 86400) // 3600)
-                minutes = int((uptime_seconds % 3600) // 60)
-                uptime_str = f"{days} days, {hours} hours, {minutes} minutes"
-        except Exception:
-            try:
-                # Fallback to uptime command if /proc/uptime fails
-                uptime_str = subprocess.check_output("uptime -p", shell=True).decode().strip()
-            except Exception as e:
-                print(f"[ERROR] Failed to get Linux uptime: {str(e)}")
-                uptime_str = "Unavailable"
+    now = datetime.now()
+    try:
+        boot_time = datetime.fromtimestamp(psutil.boot_time())
+
+        uptime = now - boot_time
+        days = uptime.days
+        hours, remainder = divmod(uptime.seconds, 3600)
+        minutes = remainder // 60
+        uptime_str = f"{days} days, {hours} hours, {minutes} minutes"
+    except Exception as e:
+        print(f"[ERROR] Uptime calculation failed: {e}")
+        uptime_str = "Unavailable"
 
     server_info = {
         "uptime": uptime_str,
-        "time": datetime.datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"),
-        "python": platform.python_version(),
-        "debug": app.debug
+        "server_time": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "python_version": platform.python_version(),
+        "debug_mode": app.debug
     }
 
     return render_template("admin.html", routes=routes, server_info=server_info)
+
+
 
 @app.route("/restart-server", methods=["POST"])
 def restart_server():
@@ -458,9 +440,7 @@ def restart_server():
 
     try:
         if platform.system() == "Windows":
-            # Get the current process ID
             current_pid = os.getpid()
-            # Create a batch file to restart the server
             restart_script = f"""
             @echo off
             timeout /t 2 /nobreak
@@ -470,33 +450,30 @@ def restart_server():
             """
             with open("restart.bat", "w") as f:
                 f.write(restart_script)
-            
-            # Start the restart script and exit
             subprocess.Popen(["restart.bat"], shell=True)
             return jsonify({"message": "Server restart initiated"}), 200
         else:
-            # For Linux/Unix systems, use a Python-based restart
-            # Get the current Python interpreter and script path
+            current_pid = os.getpid()
             python_path = sys.executable
             script_path = os.path.abspath(__file__)
-            current_pid = os.getpid()
-            
-            # Create a shell script to restart the server
-            restart_script = f"""#!/bin/bash
-            sleep 2
-            kill -9 {current_pid}
-            export PRODUCTION=true
-            {python_path} {script_path}
-            """
-            
-            # Write and make the script executable
+
+            # Create a safer and cleaner restart script
+            restart_script = """#!/bin/bash
+sleep 2
+PID=$1
+kill "$PID"
+while kill -0 "$PID" 2>/dev/null; do sleep 0.5; done
+export PRODUCTION=true
+exec "$2" "$3"
+"""
+
             with open("restart.sh", "w") as f:
                 f.write(restart_script)
             os.chmod("restart.sh", 0o755)
-            
-            # Start the restart script and exit
-            subprocess.Popen(["./restart.sh"], shell=True)
+
+            subprocess.Popen(["./restart.sh", str(current_pid), python_path, script_path])
             return jsonify({"message": "Server restart initiated"}), 200
+
     except Exception as e:
         print(f"[ERROR] Failed to restart server: {str(e)}")
         return jsonify({"error": f"Failed to restart server: {str(e)}"}), 500

@@ -15,16 +15,21 @@
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt</h1>
-        <p>Secure File Pickup and Decryption</p>
-    </header>
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Encrypted File Pickup</p>
+          </div>
+        </div>
+      </header>  
 
     <!-- Main Content -->
     <main>
         <!-- File Pickup Section -->
         <section id="pickup-section" class="card form-group">
-            <h2>🔐 File Pickup</h2>
+            <h2>File Pickup</h2>
             
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -61,14 +66,14 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="submit">📥 Decrypt and Download</button>
+                    <button type="submit">Decrypt and Download</button>
                 </div>
             </form>
         </section>
 
         <!-- Security Notice Section -->
         <section id="security-notice-section" class="card form-group">
-            <h2>🛡️ Security Notice</h2>
+            <h2>Security Notice</h2>
             <p style="color: #00ff99; text-align: center;">
                 Make sure you're on the correct domain before entering any passwords.<br>
                 Your file will be permanently deleted after download.

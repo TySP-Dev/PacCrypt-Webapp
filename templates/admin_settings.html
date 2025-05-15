@@ -16,16 +16,21 @@
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt Admin Settings</h1>
-        <p>Manage upload configuration</p>
-    </header>
-
+    <!-- Header -->
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Server Settings</p>
+          </div>
+        </div>
+      </header>  
     <!-- Main Content -->
     <main>
         <!-- Settings Form Section -->
         <section class="card form-group">
-            <h2>⚙️ Upload Settings</h2>
+            <h2>Upload Settings</h2>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -51,9 +56,9 @@
 
                 <!-- Action Buttons -->
                 <div class="button-group mt-4">
-                    <button type="submit">💾 Save Settings</button>
+                    <button type="submit">Save Settings</button>
                     <a href="{{ url_for('admin_page') }}">
-                        <button type="button">⬅️ Back to Admin Panel</button>
+                        <button type="button">Back to Admin Panel</button>
                     </a>
                 </div>
             </form>

@@ -1,7 +1,7 @@
 /* ===== Global Reset ===== */
 * {
     box-sizing: border-box;
-    margin: 3px;
+    gap: 6px !important;
     padding: 0;
 }
 
@@ -21,21 +21,42 @@ body {
 }
 
 @media (max-width: 600px) {
+    #sitemap-section,
+    #password-change-section,
+    #server-update-section,
+    #server-status-section,
+    #server-logs-section,
+    #system-settings-section {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    #sitemap-section li,
+    #server-status-section li {
+        font-size: 0.9em;
+        padding: 6px;
+    }
+
+    #logContainer {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+
     body {
         font-size: 11px;
         padding: 10px;
     }
 
-    .button-group {
+    .button-group,
+    .admin-button-grid {
       flex-direction: column;
-      gap: 12px;
-      align-items: stretch;
+      align-items: center;
     }
   
-    .button-group button {
-      width: 100%;
-      min-width: unset;
-      max-width: 100%;
+    .button-group button,
+    .admin-button-grid button {
+      min-width: 75%;
+      max-width: 75%;
     }
 
     header {
@@ -48,7 +69,6 @@ body {
     .logo-container {
       flex-direction: column;
       align-items: center;
-      gap: 12px;
     }
   
     .logo-container img {
@@ -77,9 +97,16 @@ body {
     .admin-button-grid {
         grid-template-columns: 1fr;
     }
+
+    .status-list {
+        width: 100%;
+        max-width: 400px;
+        padding-left: 0;
+        list-style: none;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }    
 }
-  
-  
 
 /* ===== Header ===== */
 header {
@@ -99,7 +126,6 @@ header {
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 10px; /* optional: controls spacing between logo and text */
 }
 
 .logo-container img {
@@ -135,7 +161,6 @@ main {
     width: 100%;
     max-width: 800px;
     padding: 0;
-    gap: 0;
 }
 
 /* ===== Card Styling ===== */
@@ -153,12 +178,22 @@ main {
     display: flex !important;
     flex-direction: column;
     align-items: center;
-    gap: 0px;
     max-width: 725px;
     width: 100%;
 }
 
+.status-list {
+    width: 100%;
+    max-width: 400px;
+    padding-left: 0;
+    list-style: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+
 /* ===== Inputs, Textareas, Selects ===== */
+
 button,
 select,
 input,
@@ -182,6 +217,7 @@ input[type="file"] {
     color: #28E060;
     text-align: left;
     transition: 0.3s;
+    min-height: 50px;
 }
 
 select {
@@ -191,10 +227,6 @@ select {
 textarea {
     min-height: 140px;
     resize: none;
-}
-
-input[type="password"] {
-    min-height: 50px;
 }
 
 /* ===== File Input Customization ===== */
@@ -247,7 +279,6 @@ select:focus {
     display: flex;
     flex-wrap: nowrap;
     justify-content: center;
-    gap: 15px;
     width: 100%;
 }
 
@@ -287,7 +318,6 @@ button {
 .admin-button-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacer); /* e.g., 20px between rows and columns */
     justify-items: center;
     width: 100%;
     max-width: 640px;
@@ -308,7 +338,6 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
   }
   
   .toggle-label {
@@ -376,7 +405,6 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     width: 100%;
 }
 
@@ -524,8 +552,8 @@ footer {
     select,
     #input-text,
     #output-text {
-        width: 100%;
-        max-width: 90%;
+        width: 100% !important;
+        max-width: 90% !important;
     }
 }
 
@@ -556,7 +584,6 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     margin-top: 12px;
     margin-bottom: 12px;
 }
@@ -590,12 +617,6 @@ form {
     align-items: center;
 }
 
-form input {
-    min-height: 50px;
-    width: 80%;
-    max-width: 500px;
-    text-align: left;
-}
 
 /* ===== Section Card Styling ===== */
 section.card {
@@ -620,7 +641,6 @@ section.card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
     margin-bottom: 25px;
     max-width: 725px;
     width: 100%;
@@ -774,7 +794,7 @@ section.card {
 
 #sitemap-section li,
 #server-status-section li {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     padding: 8px;
     background-color: #2c2f33;
     border-radius: 6px;
@@ -810,28 +830,4 @@ section.card {
     background-color: #1e1e1e;
     border-radius: 12px;
     box-shadow: 0 0 15px #28E060;
-}
-
-/* ===== Mobile Responsive Adjustments ===== */
-@media (max-width: 768px) {
-    #sitemap-section,
-    #password-change-section,
-    #server-update-section,
-    #server-status-section,
-    #server-logs-section,
-    #system-settings-section {
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    #sitemap-section li,
-    #server-status-section li {
-        font-size: 0.9em;
-        padding: 6px;
-    }
-
-    #logContainer {
-        font-size: 0.9em;
-        padding: 10px;
-    }
 }

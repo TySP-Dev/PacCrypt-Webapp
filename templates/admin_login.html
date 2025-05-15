@@ -18,16 +18,20 @@
 </head>
 <body class="dark">
     <!-- Header -->
-    <header class="card">
-        <h1>PacCrypt Admin</h1>
-        <p>Administrator Login</p>
-    </header>
-
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Admin Login</p>
+          </div>
+        </div>
+      </header>  
     <!-- Main Content -->
     <main>
         <!-- Login Form Section -->
         <section class="card form-group">
-            <h2>🔑 Admin Login</h2>
+            <h2>Admin Login</h2>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -41,7 +45,7 @@
                 <input type="text" name="username" placeholder="Username" required />
                 <input type="password" name="password" placeholder="Password" required />
                 <div class="button-group mt-3">
-                    <button type="submit">🚪 Log In</button>
+                    <button type="submit">Log In</button>
                 </div>
             </form>
         </section>
