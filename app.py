@@ -695,7 +695,7 @@ def api_encrypt_file():
         return jsonify({"error": "Missing file or password"}), 400
 
     uploaded_file = request.files["file"]
-    password = request.form["password"]
+    password = request.form["enc_password"]
 
     try:
         file_data = uploaded_file.read()
@@ -725,7 +725,7 @@ def api_decrypt_file():
         return jsonify({"error": "Missing file or password"}), 400
 
     uploaded_file = request.files["file"]
-    password = request.form["password"]
+    password = request.form["enc_password"]
 
     try:
         encrypted_data = uploaded_file.read()
