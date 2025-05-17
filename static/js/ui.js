@@ -7,16 +7,13 @@ import { encryptFile, decryptFile } from './fileops.js';
 
 // ===== UI Initialization =====
 export function setupUI() {
-    // Set initial state of remove button to hidden
     const removeBtn = document.getElementById("remove-file-btn");
     if (removeBtn) {
         removeBtn.style.display = "none";
     }
-    
     initializeEventListeners();
 }
 
-// ===== Event Listeners =====
 function initializeEventListeners() {
     const elements = {
         encryptionType: document.getElementById("encryption-type"),
@@ -55,10 +52,7 @@ function setupElementListeners(elements) {
     elements.toggleSwitch.addEventListener("change", () => {
         console.log("Mode:", elements.toggleSwitch.checked ? "Decrypt" : "Encrypt");
     });
-    
-      
 
-    // Add file input change listener
     const fileInput = document.getElementById("file-input");
     if (fileInput) {
         fileInput.addEventListener("change", () => {
@@ -93,7 +87,6 @@ function setupShareLinkListeners(elements) {
     }
 }
 
-// ===== UI State Management =====
 function toggleEncryptionOptions() {
     const type = document.getElementById("encryption-type").value.trim().toLowerCase();
     const passwordInputWrapper = document.getElementById("password-input");
@@ -101,19 +94,11 @@ function toggleEncryptionOptions() {
     const isAdvanced = type.includes("advanced");
 
     if (passwordInputWrapper) {
-        if (isAdvanced) {
-            passwordInputWrapper.classList.remove("hidden");
-        } else {
-            passwordInputWrapper.classList.add("hidden");
-        }
+        passwordInputWrapper.classList.toggle("hidden", !isAdvanced);
     }
 
     if (fileSection) {
-        if (isAdvanced) {
-            fileSection.classList.remove("hidden");
-        } else {
-            fileSection.classList.add("hidden");
-        }
+        fileSection.classList.toggle("hidden", !isAdvanced);
     }
 
     updateToggleLabels();
@@ -150,7 +135,6 @@ function toggleInputMode() {
     removeBtn.style.display = fileSelected ? "inline-block" : "none";
 }
 
-// ===== Form Handling =====
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -189,14 +173,18 @@ async function handleTextOperation(encryptionType, operation, password) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
+
         const data = await response.json();
-        document.getElementById("output-text").value = data.result;
+
+        const outputField = document.getElementById("output-text");
+        if (outputField) {
+            outputField.value = data.result || "[Error] No response received.";
+        }
     } catch (err) {
         alert("Error processing request: " + err.message);
     }
 }
 
-// ===== Utility Functions =====
 function removeFile() {
     const fileInput = document.getElementById("file-input");
     if (fileInput) fileInput.value = "";
@@ -214,7 +202,6 @@ function generateRandomPassword() {
     const passwordField = document.getElementById("generated-password");
     if (passwordField) {
         passwordField.value = password;
-        // Check if we should start Pacman
         checkForPacman();
     }
 }
@@ -225,33 +212,27 @@ function copyToClipboard(elementId, feedbackId) {
 
     if (!el || !el.value) return;
 
-    // Create a temporary textarea element
     const textarea = document.createElement('textarea');
     textarea.value = el.value;
     textarea.style.position = 'fixed';
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
-    
-    // Select and copy the text
+
     textarea.select();
-    textarea.setSelectionRange(0, 99999); // For mobile devices
-    
+    textarea.setSelectionRange(0, 99999);
+
     try {
-        // Try using the modern clipboard API first
         navigator.clipboard.writeText(el.value).then(() => {
             showFeedback(feedback);
         }).catch(() => {
-            // Fallback to execCommand for older browsers
             document.execCommand('copy');
             showFeedback(feedback);
         });
     } catch (err) {
-        // Final fallback
         document.execCommand('copy');
         showFeedback(feedback);
     }
-    
-    // Clean up
+
     document.body.removeChild(textarea);
 }
 
@@ -298,6 +279,7 @@ function checkForPacman() {
         window.exitGame();
     }
 }
+
 function copyShareLink() {
     const linkEl = document.getElementById("share-link");
     const feedback = document.getElementById("shared-link-feedback");
@@ -346,8 +328,5 @@ function showCopyFeedback(feedbackEl) {
     }, 3000);
 }
 
-
 function startPacman() { }
 function exitGame() { }
-
-

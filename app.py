@@ -8,14 +8,14 @@ import hashlib
 import secrets
 import subprocess
 import platform
-from datetime import datetime, timedelta
+from datetime import datetime
 import sys
 import psutil
 
 # ===== Third-Party Imports =====
 from flask import (
     Flask, render_template, request, jsonify, session,
-    redirect, url_for, flash, send_file
+    redirect, url_for, flash, send_file, make_response
 )
 from werkzeug.utils import secure_filename
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -83,20 +83,21 @@ def simple_decode(text: str) -> str:
     return ''.join(ALPHABET[(ALPHABET.index(c) - 3) % 26] if c in ALPHABET else c for c in text.lower())
 
 def advanced_encrypt(plaintext: str, password: str) -> str:
-    """Encrypt text using AES-GCM with password-derived key."""
+    """Encrypt plaintext with AES-GCM and return base64-encoded result."""
     salt = os.urandom(16)
-    key = derive_key(password, salt)
     nonce = os.urandom(12)
-    ct = AESGCM(key).encrypt(nonce, plaintext.encode(), None)
-    return base64.urlsafe_b64encode(salt + nonce + ct).decode()
+    key = derive_key(password, salt)
+    ciphertext = AESGCM(key).encrypt(nonce, plaintext.encode(), None)
+    return base64.b64encode(salt + nonce + ciphertext).decode()
 
-def advanced_decrypt(token_b64: str, password: str) -> str:
-    """Decrypt text using AES-GCM with password-derived key."""
+def advanced_decrypt(data_b64: str, password: str) -> str:
+    """Decrypt base64-encoded AES-GCM encrypted data."""
     try:
-        data = base64.urlsafe_b64decode(token_b64.encode())
-        salt, nonce, ct = data[:16], data[16:28], data[28:]
+        data = base64.b64decode(data_b64)
+        salt, nonce, ciphertext = data[:16], data[16:28], data[28:]
         key = derive_key(password, salt)
-        return AESGCM(key).decrypt(nonce, ct, None).decode()
+        plaintext = AESGCM(key).decrypt(nonce, ciphertext, None)
+        return plaintext.decode()
     except Exception:
         return "[Error] Invalid password or corrupted data!"
 
@@ -207,7 +208,7 @@ def handle_file_upload(request):
 
     meta = {
         'pickup_password': base64.urlsafe_b64encode(hashlib.sha256(pickup_password.encode()).digest()).decode(),
-        'original_name': filename,
+        'original_name': encrypt_filename(filename, enc_password),
         'timestamp': datetime.now().isoformat()
     }
     with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.json"), 'w') as f:
@@ -217,7 +218,6 @@ def handle_file_upload(request):
     return jsonify({"success": True, "pickup_url": pickup_url})
 
 def handle_text_operation(request):
-    """Process text encryption/decryption operations."""
     data = request.get_json()
     encryption_type = data.get("encryption-type", "basic")
     operation = data.get("operation", "")
@@ -226,10 +226,27 @@ def handle_text_operation(request):
 
     if encryption_type == "basic":
         result = simple_encode(message) if operation == "encrypt" else simple_decode(message)
-    else:
-        result = advanced_encrypt(message, password) if operation == "encrypt" else advanced_decrypt(message, password)
+        return jsonify(result=html.escape(result))
 
-    return jsonify(result=html.escape(result))
+    if operation == "encrypt":
+        encrypted = advanced_encrypt(message, password)
+        return jsonify(result=encrypted)
+    else:
+        decrypted = advanced_decrypt(message, password)
+        return jsonify(result=html.escape(decrypted))
+
+def encrypt_filename(filename: str, password: str) -> str:
+    salt = os.urandom(16)
+    key = derive_key(password, salt)
+    nonce = os.urandom(12)
+    ct = AESGCM(key).encrypt(nonce, filename.encode(), None)
+    return base64.urlsafe_b64encode(salt + nonce + ct).decode()
+
+def decrypt_filename(enc_filename_b64: str, password: str) -> str:
+    raw = base64.urlsafe_b64decode(enc_filename_b64)
+    salt, nonce, ct = raw[:16], raw[16:28], raw[28:]
+    key = derive_key(password, salt)
+    return AESGCM(key).decrypt(nonce, ct, None).decode()
 
 # ===== File Pickup Route =====
 @app.route("/pickup/<file_id>", methods=["GET", "POST"])
@@ -278,15 +295,22 @@ def handle_file_pickup(request, meta_path, enc_path, file_id):
     os.remove(enc_path)
     log_admin_event(f"File {file_id} downloaded and deleted.")
 
+    try:
+        original_name = decrypt_filename(meta['original_name'], enc_password)
+    except Exception:
+        original_name = "retrieved_file"
+
     response = send_file(
         io.BytesIO(decrypted),
         as_attachment=True,
-        download_name=meta['original_name'],
+
+        download_name=original_name,
         mimetype='application/octet-stream'
     )
     
     # Add headers for better mobile compatibility
-    response.headers['Content-Disposition'] = f'attachment; filename="{meta["original_name"]}"'
+    
+    response.headers['Content-Disposition'] = f'attachment; filename="{original_name}"'
     response.headers['Content-Type'] = 'application/octet-stream'
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
@@ -661,6 +685,96 @@ def robots_txt():
     ]
     return "\n".join(lines), 200, {"Content-Type": "text/plain"}
 
+# ===== API Endpoints =====
+@app.route("/api/encrypt", methods=["POST"])
+def api_encrypt():
+    try:
+        req = request.get_json()
+        password = req.get("password")
+        data_b64 = req.get("data")
+
+        if not password or not data_b64:
+            return jsonify({"error": "Missing data or password"}), 400
+
+        file_data = base64.b64decode(data_b64)
+        salt = os.urandom(16)
+        key = derive_key(password, salt)
+        nonce = os.urandom(12)
+        ct = AESGCM(key).encrypt(nonce, file_data, None)
+        encrypted_binary = salt + nonce + ct
+
+        # Return base64 string of the binary
+        encrypted_b64 = base64.b64encode(encrypted_binary).decode()
+        return jsonify({"result": encrypted_b64}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/decrypt", methods=["POST"])
+def api_decrypt():
+    try:
+        req = request.get_json()
+        password = req.get("password")
+        encrypted_b64 = req.get("data")
+
+        if not password or not encrypted_b64:
+            return jsonify({"error": "Missing data or password"}), 400
+
+        encrypted_binary = base64.b64decode(encrypted_b64)
+        salt, nonce, ct = encrypted_binary[:16], encrypted_binary[16:28], encrypted_binary[28:]
+        key = derive_key(password, salt)
+        decrypted = AESGCM(key).decrypt(nonce, ct, None)
+
+        return jsonify({"result": base64.b64encode(decrypted).decode()}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/pacshare", methods=["POST"])
+def api_pacshare():
+    try:
+        enc_password = request.form.get("enc_password")
+        pickup_password = request.form.get("pickup_password")
+        file = request.files.get("file")
+
+        if not file or not enc_password or not pickup_password:
+            return jsonify({"error": "Missing file or fields"}), 400
+
+        file_data = file.read()
+        filename = secure_filename(file.filename)
+
+        salt = os.urandom(16)
+        key = derive_key(enc_password, salt)
+        nonce = os.urandom(12)
+        ct = AESGCM(key).encrypt(nonce, file_data, None)
+        encrypted = salt + nonce + ct
+
+        file_id = secrets.token_urlsafe(24)
+        enc_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.enc")
+        meta_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.json")
+
+        with open(enc_path, "wb") as f:
+            f.write(encrypted)
+
+        encrypted_filename = encrypt_filename(filename, enc_password)
+
+        meta = {
+            'pickup_password': base64.urlsafe_b64encode(
+                hashlib.sha256(pickup_password.encode()).digest()
+            ).decode(),
+            'original_name': encrypted_filename,
+            'timestamp': datetime.now().isoformat()
+        }
+
+        with open(meta_path, "w") as f:
+            json.dump(meta, f)
+
+        pickup_url = request.host_url.rstrip('/') + url_for('pickup_file', file_id=file_id)
+        return jsonify({"pickup_url": pickup_url})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # ===== Error Handlers =====
 @app.errorhandler(404)
 def page_not_found(e):
@@ -695,3 +809,4 @@ if __name__ == "__main__":
     else:
         print("[INFO] Running in DEVELOPMENT mode with Flask server.")
         app.run(debug=True, host="0.0.0.0", port=5000)
+
