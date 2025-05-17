@@ -208,7 +208,7 @@ def handle_file_upload(request):
     meta = {
         'pickup_password': base64.urlsafe_b64encode(hashlib.sha256(pickup_password.encode()).digest()).decode(),
         'original_name': filename,
-        'timestamp': datetime.datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat()
     }
     with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.json"), 'w') as f:
         json.dump(meta, f)
