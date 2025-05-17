@@ -11,6 +11,8 @@ import platform
 from datetime import datetime
 import sys
 import psutil
+from flask_cors import CORS
+from io import BytesIO
 
 # ===== Third-Party Imports =====
 from flask import (
@@ -26,6 +28,7 @@ from cryptography.fernet import Fernet
 # ===== Application Configuration =====
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET", os.urandom(24))
+CORS(app)
 
 # ===== Constants =====
 ADMIN_CRED_FILE = 'admin_creds.json'
@@ -687,45 +690,62 @@ def robots_txt():
 
 # ===== API Endpoints =====
 @app.route("/api/encrypt", methods=["POST"])
-def api_encrypt():
+def api_encrypt_file():
+    if "file" not in request.files or "password" not in request.form:
+        return jsonify({"error": "Missing file or password"}), 400
+
+    uploaded_file = request.files["file"]
+    password = request.form["password"]
+
     try:
-        req = request.get_json()
-        password = req.get("password")
-        data_b64 = req.get("data")
-
-        if not password or not data_b64:
-            return jsonify({"error": "Missing data or password"}), 400
-
-        file_data = base64.b64decode(data_b64)
+        file_data = uploaded_file.read()
         salt = os.urandom(16)
         key = derive_key(password, salt)
         nonce = os.urandom(12)
         ct = AESGCM(key).encrypt(nonce, file_data, None)
         encrypted_binary = salt + nonce + ct
 
-        # Return base64 string of the binary
-        encrypted_b64 = base64.b64encode(encrypted_binary).decode()
-        return jsonify({"result": encrypted_b64}), 200
+        # Create proper output filename
+        original_filename = uploaded_file.filename
+        output_filename = f"{original_filename}.encrypted"
+
+        return send_file(
+            BytesIO(encrypted_binary),
+            as_attachment=True,
+            download_name=output_filename,
+            mimetype="application/octet-stream"
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/decrypt", methods=["POST"])
-def api_decrypt():
+def api_decrypt_file():
+    if "file" not in request.files or "password" not in request.form:
+        return jsonify({"error": "Missing file or password"}), 400
+
+    uploaded_file = request.files["file"]
+    password = request.form["password"]
+
     try:
-        req = request.get_json()
-        password = req.get("password")
-        encrypted_b64 = req.get("data")
-
-        if not password or not encrypted_b64:
-            return jsonify({"error": "Missing data or password"}), 400
-
-        encrypted_binary = base64.b64decode(encrypted_b64)
-        salt, nonce, ct = encrypted_binary[:16], encrypted_binary[16:28], encrypted_binary[28:]
+        encrypted_data = uploaded_file.read()
+        salt, nonce, ct = encrypted_data[:16], encrypted_data[16:28], encrypted_data[28:]
         key = derive_key(password, salt)
         decrypted = AESGCM(key).decrypt(nonce, ct, None)
 
-        return jsonify({"result": base64.b64encode(decrypted).decode()}), 200
+        # Strip `.encrypted` from filename
+        original_filename = uploaded_file.filename
+        if original_filename.endswith(".encrypted"):
+            original_filename = original_filename[:-10]
+        else:
+            original_filename = f"decrypted_{original_filename}"
+
+        return send_file(
+            BytesIO(decrypted),
+            as_attachment=True,
+            download_name=original_filename,
+            mimetype="application/octet-stream"
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
