@@ -253,6 +253,8 @@ PacCrypt/
 │   │   └── PacCrypt.png
 │   │   └── Github_logo.png
 │   │   └── sitemap.png
+│   ├── fonts/
+│   │   └── PressStart2P-Regular.ttf
 │   └── audio/
 │       └── chomp.mp3
 ├── start_dev.bat
