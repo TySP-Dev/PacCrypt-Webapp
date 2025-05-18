@@ -1,6 +1,7 @@
 ### **requirements.txt**
 
 flask==3.0.3
+flask-cors
 cryptography==42.0.5
 waitress==2.1.2
 werkzeug==3.0.1

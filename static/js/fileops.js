@@ -1,19 +1,43 @@
+import { deriveKey } from "./encryption.js";  // assuming shared deriveKey()
+
+const SALT_LENGTH = 16;
+const IV_LENGTH = 12;
+const KEY_LENGTH = 256;
+
 /**
- * File operations module.
- * Handles file encryption and decryption operations.
+ * Encrypts a full file and downloads the encrypted version.
  */
-
-// ===== Constants =====
-const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-
-// ===== Public Interface =====
 export async function encryptFile(fileInput, password) {
     const file = fileInput.files[0];
     if (!file) return;
 
     try {
-        const encryptedChunks = await processFile(file, password, true);
-        downloadEncryptedFile(encryptedChunks, file.name);
+        const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+        const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+        const key = await deriveKey(password, salt);
+        const fileBuffer = new Uint8Array(await file.arrayBuffer());
+
+        const ciphertext = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv },
+            key,
+            fileBuffer
+        );
+
+        const ctBytes = new Uint8Array(ciphertext);
+        const result = new Uint8Array(salt.length + iv.length + ctBytes.length);
+        result.set(salt);
+        result.set(iv, salt.length);
+        result.set(ctBytes, salt.length + iv.length);
+
+        const blob = new Blob([result], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name + ".encrypted";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     } catch (error) {
         alert("Error encrypting file: " + error.message);
     }
@@ -24,8 +48,27 @@ export async function decryptFile(fileInput, password) {
     if (!file) return;
 
     try {
-        const decryptedChunks = await processFile(file, password, false);
-        downloadDecryptedFile(decryptedChunks, file.name);
+        const data = new Uint8Array(await file.arrayBuffer());
+        const salt = data.slice(0, SALT_LENGTH);
+        const iv = data.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+        const ciphertext = data.slice(SALT_LENGTH + IV_LENGTH);
+        const key = await deriveKey(password, salt);
+
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv },
+            key,
+            ciphertext
+        );
+
+        const blob = new Blob([decrypted], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name.replace(".encrypted", "");
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     } catch (error) {
         alert("Error decrypting file: " + error.message);
     }

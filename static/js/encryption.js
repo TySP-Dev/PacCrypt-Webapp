@@ -10,6 +10,23 @@ const IV_LENGTH = 12;
 const PBKDF2_ITERATIONS = 200_000;
 const KEY_LENGTH = 256;
 
+// ===== Binary-safe Base64 Helpers =====
+function base64Encode(buffer) {
+    const binary = Array.from(new Uint8Array(buffer))
+        .map(byte => String.fromCharCode(byte))
+        .join('');
+    return btoa(binary);
+}
+
+function base64Decode(b64str) {
+    const binary = atob(b64str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+
 // ===== Key Derivation =====
 /**
  * Derives an AES-GCM key from a password using PBKDF2.
@@ -66,7 +83,7 @@ export async function encryptAdvanced(message, password) {
     output.set(iv, salt.length);
     output.set(new Uint8Array(ciphertext), salt.length + iv.length);
 
-    return btoa(String.fromCharCode(...output));
+    return base64Encode(output.buffer);
 }
 
 // ===== Decryption =====
@@ -77,9 +94,7 @@ export async function encryptAdvanced(message, password) {
  * @returns {Promise<string>} - Decrypted plaintext.
  */
 export async function decryptAdvanced(encryptedData, password) {
-    const encrypted = new Uint8Array(
-        atob(encryptedData).split('').map(c => c.charCodeAt(0))
-    );
+    const encrypted = base64Decode(encryptedData);
 
     const salt = encrypted.slice(0, SALT_LENGTH);
     const iv = encrypted.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
