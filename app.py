@@ -28,7 +28,7 @@ from cryptography.fernet import Fernet
 # ===== Application Configuration =====
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET", os.urandom(24))
-CORS(app)
+CORS(app, origins=["https://pdf.unnaturalll.dev"])
 
 # ===== Constants =====
 ADMIN_CRED_FILE = 'admin_creds.json'
