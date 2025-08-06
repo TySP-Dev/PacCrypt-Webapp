@@ -50,11 +50,13 @@ Implement engines:
 [] rsa_hybrid.py
 [] kyber_hybrid.py (Testing)
 [] Each must expose:
-`def encrypt\_text(text, key, metadata): ...`
-`def decrypt\_text(ciphertext, key, metadata): ...`
-`def encrypt\_file(in\_path, out\_path, key, metadata): ...`
-`def decrypt\_file(in\_path, out\_path, key, metadata): ...`
-`def get\_name(): return "AES-GCM"`
+```
+def encrypt\_text(text, key, metadata): ...
+def decrypt\_text(ciphertext, key, metadata): ...
+def encrypt\_file(in\_path, out\_path, key, metadata): ...
+def decrypt\_file(in\_path, out\_path, key, metadata): ...
+def get\_name(): return "AES-GCM"
+```
 ---
 ### Phase 2: PacShare - Reimplementation
 /encrypt Route Flow
@@ -83,22 +85,26 @@ Implement engines:
 [] Offer file download
 ---
 ##### Metadata Structure (Encrypted JSON)
-`"filename": "report.pdf",`
-`"enc\_mode": "aes\_gcm",`
-`"pickup\_hash": "<argon2>",`
-`"created\_at": "2025-08-05T18:00Z",`
-`"2fa\_seed": "base32string",  // optional`
-`"yubi\_token\_hash": "sha256", // optional`
+```
+"filename": "report.pdf",
+"enc\_mode": "aes\_gcm",
+"pickup\_hash": "<argon2>",
+"created\_at": "2025-08-05T18:00Z",
+"2fa\_seed": "base32string",  // optional
+"yubi\_token\_hash": "sha256", // optional
+```
 >Stored as .meta
 >Encrypted with AES-GCM using key from pickup\_password
 ---
 ### Phase 3: External API Access (/api/*)
 ##### Endpoint	Description
-`POST /api/encrypt	Local-only file/text encryption (returns file/meta)`
-`POST /api/ps-send	Upload + encrypt + return pickup link (JSON)`
-`POST /api/ps-pickup	Provide pickup ID + passwords, return decrypted file`
-`POST /api/decrypt	Decrypt local .enc + .meta bundle`
-`GET /api/version	Return current version tag`
+```
+POST /api/encrypt	Local-only file/text encryption (returns file/meta)
+POST /api/ps-send	Upload + encrypt + return pickup link (JSON)
+POST /api/ps-pickup	Provide pickup ID + passwords, return decrypted file
+POST /api/decrypt	Decrypt local .enc + .meta bundle
+GET /api/version	Return current version tag
+```
 > These endpoints must receive both passwords. Encryption password is never saved.
 ---
 ### Phase 4: CLI Tool (Offline and API Hybrid)
@@ -118,7 +124,7 @@ Optional (Send + Pickup)
 [] 2FA Token
 ⦁	No Yubi or passkey support for API calls
 [] --help (Shows command usage)
-[] CLI PacMan like mini game "(LOW PRIORITY)"
+[] CLI PacMan like mini game (LOW PRIORITY)
 ---
 ### Phase 5: Local GUI Applications
 ##### Linux (First)
@@ -154,14 +160,17 @@ Optional (Send + Pickup)
 [] PS 2FA Token support
 ⦁	No Yubi/Passkey support for API calls
 [] PS error message if devices is offline or server can't be reached
-> No Windows support for a application, only webapp, and maybe CLI support.
-> Linux master race
+> No 	<ins>Windows</ins> support for a application, only webapp, and maybe CLI support.
+
+`Linux master race`
 
 ---
 ### PacShare File Format
+```
 pacshare/
 ├── <file_id>pdf/jpeg/etc.paccrypt      # Encrypted binary file
 └── <file_id>meta.paccrypt		# Encrypted metadata
+```
 ---
 ### Development Order
 0.	[] Phase 0 Tasks
@@ -185,113 +194,60 @@ pacshare/
 ---
 
 ### Draft tree for webapp
-
+```
 paccrypt-webapp/
-
 ├── static/
-
 │   ├── audio/
-
 │   │   └── chomp.mp3
-
 │   ├── css/
-
 │   │   └── styles.css
-
 │   ├── fonts/
-
 │   │   └── PressStart2P-Regular.ttf
-
 │   ├── img/
-
 │   │   ├── Github_logo.png
-
 │   │   ├── PacCrypt.png
-
 │   │   ├── PacCrypt_W-Background.png
-
 │   │   ├── PacCrypt_W-Backgroud_Name.png
-
 │   │   ├── PacCrypt_W-Name.png
-
 │   │   └── sitemap.png <-- **Change img**
-
 │   └── js/ <-- **Pending changes**
-
 │       ├── encryption.js
-
 │       ├── fileops.js
-
 │       ├── main.js
-
 │       ├── pacman.js
-
 │       └── ui.js
-
 ├── templates/
-
 │   ├── 403.html
-
 │   ├── 404.html
-
 │   ├── 500.html
-
 │   ├── admin.html
-
 │   ├── admin_login.html
-
 │   ├── admin_settings.html
-
 │   ├── admin_setup.html
-
 │   ├── index.html
-
 │   └── pickup.html
-
 ├── application_data/ <-- *New*
-
 │   ├── scripts/ <-- *New*
-
 │   │   ├── start_dev <-- *Moved*
-
 │   │   ├── start_prod <-- *Moved*
-
 │   │   ├── restart_dev <-- *New*
-
 │   │   ├── restart_prod <-- *New*
-
 │   │   └── stop <-- *New*
-
 │   ├── settings.json <-- *Moved*
-
 │   ├── requirements.txt <-- *Moved*
-
 │   ├── admin_cred <-- **Generated once admin is setup** / *Moved*
-
 │   └── admin_hash <-- **Generated once admin is setup** / *Moved*
-
 ├── paccrypt_algos/ <-- *New*
-
 │   ├── aes_gcm.py <-- *New*
-
 │   ├── aes_cbc.py <-- *New*
-
 │   ├── xchacha.py <-- *New*
-
 │   ├── rsa_hybrid.py <-- *New*
-
 │   └── kyber_hybrid.py <-- *New*
-
 ├── pacshare/ <-- **Generated at time of first PacShare upload, location customizable** / *New*
-
 │   ├── <file_id>pdf/jpeg/etc.paccrypt <-- **Encrypted binary file** / *Moved*
-
 │   └── <file_id>meta.paccrypt <-- **Encrypted metadata** / *Moved*
-
 ├── README.md <-- **Needs Updated**
-
 ├── ROADMAP.md
-
 ├── LICENSE <-- *New*
-
 └── app.py
+```
