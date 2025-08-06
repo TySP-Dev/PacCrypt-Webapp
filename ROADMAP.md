@@ -1,62 +1,5 @@
 > Fully modular code for encryption libraries, ensure metadata is stored as encrypted hashs for PacShare, Revamp PacShares secure file send and pickup, and create a CLI and local application (Linux and Android).
 
-### Draft tree for webapp
-
-\paccrypt-webapp/
-\├── static/
-\│   ├── audio/
-\│   │   └── chomp.mp3
-\│   ├── css/
-\│   │   └── styles.css
-\│   ├── fonts/
-\│   │   └── PressStart2P-Regular.ttf
-\│   ├── img/
-\│   │   ├── Github_logo.png
-\│   │   ├── PacCrypt.png
-\│   │   ├── PacCrypt_W-Background.png
-\│   │   ├── PacCrypt_W-Backgroud_Name.png
-\│   │   ├── PacCrypt_W-Name.png
-\│   │   └── sitemap.png <-- **Change img**
-\│   └── js/ <-- **Pending changes**
-\│       ├── encryption.js
-\│       ├── fileops.js
-\│       ├── main.js
-\│       ├── pacman.js
-\│       └── ui.js
-\├── templates/
-\│   ├── 403.html
-\│   ├── 404.html
-\│   ├── 500.html
-\│   ├── admin.html
-\│   ├── admin_login.html
-\│   ├── admin_settings.html
-\│   ├── admin_setup.html
-\│   ├── index.html
-\│   └── pickup.html
-\├── application_data/ <-- *New*
-\│   ├── scripts/ <-- *New*
-\│   │   ├── start_dev <-- *Moved*
-\│   │   ├── start_prod <-- *Moved*
-\│   │   ├── restart_dev <-- *New*
-\│   │   ├── restart_prod <-- *New*
-\│   │   └── stop <-- *New*
-\│   ├── settings.json <-- *Moved*
-\│   ├── requirements.txt <-- *Moved*
-\│   ├── admin_cred <-- **Generated once admin is setup** / *Moved*
-\│   └── admin_hash <-- **Generated once admin is setup** / *Moved*
-\├── paccrypt_algos/ <-- *New*
-\│   ├── aes_gcm.py <-- *New*
-\│   ├── aes_cbc.py <-- *New*
-\│   ├── xchacha.py <-- *New*
-\│   ├── rsa_hybrid.py <-- *New*
-\│   └── kyber_hybrid.py <-- *New*
-\├── pacshare/ <-- **Generated at time of first PacShare upload, location customizable** / *New*
-\│   ├── <file_id>pdf/jpeg/etc.paccrypt <-- **Encrypted binary file** / *Moved*
-\│   └── <file_id>meta.paccrypt <-- **Encrypted metadata** / *Moved*
-\├── README.md <-- **Needs Updated**
-\├── ROADMAP.md
-\├── LICENSE <-- *New*
-\└── app.py
 ---
 
 ### Phase 0
@@ -238,3 +181,117 @@ pacshare/
 15.	[] Test GUI app on Android
 16.	[] Finilize all releases and push to main.
 17.	[] Create Wiki
+
+---
+
+### Draft tree for webapp
+
+paccrypt-webapp/
+
+├── static/
+
+│   ├── audio/
+
+│   │   └── chomp.mp3
+
+│   ├── css/
+
+│   │   └── styles.css
+
+│   ├── fonts/
+
+│   │   └── PressStart2P-Regular.ttf
+
+│   ├── img/
+
+│   │   ├── Github_logo.png
+
+│   │   ├── PacCrypt.png
+
+│   │   ├── PacCrypt_W-Background.png
+
+│   │   ├── PacCrypt_W-Backgroud_Name.png
+
+│   │   ├── PacCrypt_W-Name.png
+
+│   │   └── sitemap.png <-- **Change img**
+
+│   └── js/ <-- **Pending changes**
+
+│       ├── encryption.js
+
+│       ├── fileops.js
+
+│       ├── main.js
+
+│       ├── pacman.js
+
+│       └── ui.js
+
+├── templates/
+
+│   ├── 403.html
+
+│   ├── 404.html
+
+│   ├── 500.html
+
+│   ├── admin.html
+
+│   ├── admin_login.html
+
+│   ├── admin_settings.html
+
+│   ├── admin_setup.html
+
+│   ├── index.html
+
+│   └── pickup.html
+
+├── application_data/ <-- *New*
+
+│   ├── scripts/ <-- *New*
+
+│   │   ├── start_dev <-- *Moved*
+
+│   │   ├── start_prod <-- *Moved*
+
+│   │   ├── restart_dev <-- *New*
+
+│   │   ├── restart_prod <-- *New*
+
+│   │   └── stop <-- *New*
+
+│   ├── settings.json <-- *Moved*
+
+│   ├── requirements.txt <-- *Moved*
+
+│   ├── admin_cred <-- **Generated once admin is setup** / *Moved*
+
+│   └── admin_hash <-- **Generated once admin is setup** / *Moved*
+
+├── paccrypt_algos/ <-- *New*
+
+│   ├── aes_gcm.py <-- *New*
+
+│   ├── aes_cbc.py <-- *New*
+
+│   ├── xchacha.py <-- *New*
+
+│   ├── rsa_hybrid.py <-- *New*
+
+│   └── kyber_hybrid.py <-- *New*
+
+├── pacshare/ <-- **Generated at time of first PacShare upload, location customizable** / *New*
+
+│   ├── <file_id>pdf/jpeg/etc.paccrypt <-- **Encrypted binary file** / *Moved*
+
+│   └── <file_id>meta.paccrypt <-- **Encrypted metadata** / *Moved*
+
+├── README.md <-- **Needs Updated**
+
+├── ROADMAP.md
+
+├── LICENSE <-- *New*
+
+└── app.py
