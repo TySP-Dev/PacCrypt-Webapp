@@ -1,3 +1,4 @@
+> [!IMPORTANT]
 > Fully modular code for encryption libraries, ensure metadata is stored as encrypted hashs for PacShare, Revamp PacShares secure file send and pickup, and create a CLI and local application (Linux and Android).
 
 ---
@@ -101,6 +102,7 @@ def get\_name(): return "AES-GCM"
 - Generate random file_id
 - Return /pickup/<file_id> link
 
+> [!IMPORTANT]
 > Both passwords are required. One reveals the mode + metadata, the other decrypts the file.
 
 ---
@@ -130,8 +132,8 @@ def get\_name(): return "AES-GCM"
 "yubi\_token\_hash": "sha256", // optional
 ```
 
+> [!NOTE]
 > Stored as .meta
-
 > Encrypted with AES-GCM using key from pickup\_password
 
 ---
@@ -148,6 +150,7 @@ POST /api/decrypt	Decrypt local .enc + .meta bundle
 GET /api/version	Return current version tag
 ```
 
+> [!NOTE]
 > These endpoints must receive both passwords. Encryption password is never saved.
 
 ---
@@ -250,6 +253,7 @@ Optional (Send + Pickup)
 
 - [ ] PS error message if devices is offline or server can't be reached
 
+> [!IMPORTANT]
 > No 	<ins>Windows</ins> support for a application, only webapp, and maybe CLI support.
 
 `Linux master race`
