@@ -1,11 +1,17 @@
 ### **requirements.txt**
 
-flask==3.0.3
+# Core Flask stack
+flask
 flask-cors
-cryptography==42.0.5
-waitress==2.1.2
-werkzeug==3.0.1
-psutil>=5.9.0,<6.0.0
+waitress
+werkzeug
 
-# nginx - Only needed for Nginx integration, not installed via pip
+# Encryption engines
+cryptography
+pycryptodome
+pqcrypto
+
+# Utility
+psutil
+
 # Run pip install -r application_data/requirements.txt
