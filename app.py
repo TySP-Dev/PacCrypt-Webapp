@@ -31,14 +31,14 @@ app.secret_key = os.getenv("FLASK_SECRET", os.urandom(24))
 CORS(app, origins=["https://pdf.unnaturalll.dev"])
 
 # ===== Constants =====
-ADMIN_CRED_FILE = 'admin_creds.json'
-ADMIN_KEY_FILE = 'admin_key.key'
-ADMIN_LOG_FILE = 'admin_logs.enc'
-SETTINGS_FILE = 'settings.json'
+ADMIN_CRED_FILE = 'application_data/admin_creds.json'
+ADMIN_KEY_FILE = 'application_data/admin_key.key'
+ADMIN_LOG_FILE = 'application_data/admin_logs.enc'
+SETTINGS_FILE = 'application_data/settings.json'
 ALPHABET = list('abcdefghijklmnopqrstuvwxyz')
 
 DEFAULT_SETTINGS = {
-    "upload_folder": "uploads",
+    "upload_folder": "pacshare",
     "max_file_age_days": 14,
     "max_file_size_bytes": 25 * 1024 * 1024 * 1024  # 25GB
 }

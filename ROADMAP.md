@@ -6,6 +6,11 @@
 ### Phase 0
 
 - [x] Remove docker files (Dropping official docker support)
+<<<<<<< HEAD
+
+- [x] Update README.md to be current.
+=======
+>>>>>>> 2a414e62cf21b47eb5976535fe1499e02d561f4c
 
 - [x] Add roadmap.md to repo
 
@@ -15,7 +20,7 @@
 
 - [x] Create /paccrypt_algos/ folder
 
-- [ ] Builder better start, stop and restart scripts both prod and dev (Universal)
+- [x] Builder better start, stop and restart scripts both prod and dev (Linux Only)
 
 - [ ] Add a button in the admin panel to switch to and from prod and dev modes - **Saving for UI Revamp**
 

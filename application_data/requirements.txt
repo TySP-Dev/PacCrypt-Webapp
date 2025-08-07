@@ -8,4 +8,4 @@ werkzeug==3.0.1
 psutil>=5.9.0,<6.0.0
 
 # nginx - Only needed for Nginx integration, not installed via pip
-# Run pip install -r requirements.txt
+# Run pip install -r application_data/requirements.txt
