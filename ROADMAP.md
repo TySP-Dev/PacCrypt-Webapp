@@ -6,11 +6,8 @@
 ### Phase 0
 
 - [x] Remove docker files (Dropping official docker support)
-<<<<<<< HEAD
 
 - [x] Update README.md to be current.
-=======
->>>>>>> 2a414e62cf21b47eb5976535fe1499e02d561f4c
 
 - [x] Add roadmap.md to repo
 
@@ -63,17 +60,17 @@
 
 Implement engines:
 
-- [ ] aes_gcm.py
+- [x] aes_gcm.py
 
-- [ ] aes_cbc.py
+- [x] aes_cbc.py
 
-- [ ] xchacha.py
+- [x] xchacha.py
 
-- [ ] rsa_hybrid.py
+- [x] rsa_hybrid.py
 
-- [ ] kyber_hybrid.py (Testing)
+- [x] PQCrypt_hybrid.py (Testing)
 
-- [ ] Each must expose:
+- [x] Each must expose:
 
 ```
 def encrypt\_text(text, key, metadata): ...
