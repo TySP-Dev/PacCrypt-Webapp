@@ -5,21 +5,19 @@
 
 ### Phase 0
 
-- [ ] Remove docker files (Dropping official docker support)
-
-- [ ] Update README.md to be current.
+- [x] Remove docker files (Dropping official docker support)
 
 - [x] Add roadmap.md to repo
 
-- [ ] Create /application_data/ folder (for server settings, admin login and creds)
+- [x] Create /application_data/ folder (for server settings, admin login and creds)
 
-- [ ] Create scripts folder in /application_data/
+- [x] Create scripts folder in /application_data/
 
-- [ ] Create /paccrypt_algos/ folder
+- [x] Create /paccrypt_algos/ folder
 
 - [ ] Builder better start, stop and restart scripts both prod and dev (Universal)
 
-- [ ] Add a button in the admin panel to switch to and from prod and dev modes
+- [ ] Add a button in the admin panel to switch to and from prod and dev modes - **Saving for UI Revamp**
 
 ### Phase 1: app.py - Modular Python Web App
 
