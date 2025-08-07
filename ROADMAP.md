@@ -54,7 +54,7 @@
 
 ##### /paccrypt_algos/ - Modular Crypto Engines
 
-- [ ] Create folder + interface
+- [x] Create folder + interface
 
 - [ ] Remove basic cypher
 
