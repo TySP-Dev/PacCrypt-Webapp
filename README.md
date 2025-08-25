@@ -1,51 +1,61 @@
 # PacCrypt
 
-**PacCrypt** is a secure, feature-rich web app for encrypting and decrypting text and files — built with Flask, JavaScript, and AES-GCM encryption.  
-Now with an admin control panel, GitHub updater, and a built-in Pac-Man easter egg! 🕹️
+> [!IMPORTANT]
+> PacCrypt is still in the beginning stages of development.
+> PacCrypt has not been examined for vulnerabilities yet.
+> Due to this, PacCrypt and PacShare are not recommended for PII or sensitive information.
+> User discretion is advised.
+
+**PacCrypt** is used for text encoding and decoding (using a basic Cypher), text and file encrypting and decrypting (using AES-GCM more algorithms coming) — built with Flask, JavaScript, and AES-GCM encryption.  
+Built in admin control panel, GitHub updater, and a Pac-Man __like__ game! 🕹️
 
 ---
 
-## ✨ Features
+> [!NOTE]
+> Windows as a server host is not offically supported.
+> Some features may not work, or work incorrectly, if hosted on Windows.
+> It is recommended to host the server on Linux.
+> PacCrypt Server has been tested on Debian and Arch.
+> The official server is hosted using Debian.
 
-- 🔒 Basic and Advanced Encryption for Text & Files
-- 📁 Secure File Uploads with Pickup Passwords
+## Features
+
+- 🔒 Basic Cypher for Text
+- 🔐 AES Encryption for Text & Files
+- 📁 PacShare for Encrypted File Sharing
 - 🔑 Random Password Generator
-- 🎮 Hidden Pac-Man Game — type `pacman` to play
-- 🧠 Smart UI: Auto-switches input sections, toggles encryption labels
-- 📋 Clipboard Copy Feedback with styled status boxes
+- 🎮 Pac-Man __Like__ Game — type `pacman` into input
 - 🧾 Admin Panel:
   - Site map with live route list
   - Server restart & GitHub update button
-  - Secure admin credential management
+  - Admin credential management
   - Server logs & upload cleanup
-- 🧩 System Settings Page for upload config
-- 📜 Custom 403, 404, and 500 Error Pages
-- 🤖 robots.txt and /sitemap for crawlers
-- 📱 Mobile-Responsive UI
+  - Server Settings
+- 📜 Error Landing Pages
+- 📱 Mobile UI
 
 ---
 
-## 👨‍💻 Installation
+## Installation
 
-### 📋 Prerequisites
+### Prerequisites
 
 - Python 3.7+
 - Flask 3+
 - Cryptography 42+
 - Waitress 2.1+
-- Git (For update feature)
+- Git
 - Nginx (Recommended)
-- Cockpit (Recommended if hosted on **Linux**)
 
 ---
 
 ### ⚡ Quick Setup
 
 ```bash
-git clone https://github.com/TySP-Dev/PacCrypt.git
-cd paccrypt-webapp-final
+git clone https://github.com/TySP-Dev/PacCrypt-Webapp.git
+cd PacCrypt-Webapp
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -53,26 +63,27 @@ Then run:
 
 - Development Mode:
   ```bash
-  ./start_dev.sh  #<-- start_dev.bat (Windows)
+  ./start_dev.sh
   ```
 
 - Production Mode:
   ```bash
-  ./start_prod.sh  #<-- start_prod.bat (Windows)
+  ./start_prod.sh
   ```
 
-Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000) - *If* you **are** on the host system
-Visit http://hosts_private_ip - *If* you are **not** on the host system
+Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000) - If you **are** on the host system
+Visit http://hosts_private_ip - If you are **not** on the host system but on the same network
+Visit http://hosts_public_ip:5000 - If you are **not** on the host system but on a different network
 
 ---
 
-## 🧭 Navigation & Usage
+## Navigation & Usage
 
 ### 🔑 Generate Passwords
 
 - Click Generate
-- Then hit `📋 Copy Password`
-- **Note:** This is also used as a seed generator for the Pac-Man *like* game
+- Boom a Password
+- **Note:** This is also used as a seed generator for the Pac-Man __like__ game
 
 ### 🔐 Encrypt & Decrypt
 
@@ -81,32 +92,34 @@ Visit http://hosts_private_ip - *If* you are **not** on the host system
 - Type your message or upload a file
 - Enter password (Advanced AES)
 - Hit Execute
-- Then hit `📋 Copy Output`
+- Boom Encrypted/Decrypted Text/File
 
 ### 📤 Share Files
 
 - Upload a file with two passwords:
   - Encryption password
   - Pickup password
-- Get a shareable URL and click `📋 Copy Link`
+- Get a shareable URL and click `Copy Link`
 
-### 🎮 Pac-Man *like* Game
+### 🎮 Pac-Man __like__ Game
 
 - Type `pacman` in the input box
-- Game appears with `Restart` and `Exit` buttons
-- Arrow key and Swipe controls 🕹️
-- Game restarts and a new seed is generated once all dots are eaten
+- Arrow key and Swipe controls
+- Game restarts and a new seed is generated once all dots are gone
 
 ---
 
 ## 🛠️ Admin Panel
 
-Visit `/adminpage` after setting up credentials at `/admin-setup`.
+Visit `/adminpage`
+
+> [!NOTE]
+> You will be redirected to `/admin-setup` if you have not set a username and password yet.
 
 Features:
 - 🔄 Restart server
 - 🔃 Update from GitHub (git pull)
-- 🧽 Clear uploads
+- 🧽 Clear PacShare uploads
 - 🔐 Change admin password
 - 📝 View logs
 - ⚙️ Adjust upload settings
@@ -114,7 +127,6 @@ Features:
 ---
 
 ## 🛡️ Deployment Tips
-##### I recommend using Linux as the host server, the follow confs are Linux focused
 The official PacCrypt host is **Debian** minimal install.
 
 **HTTP** Nginx config (Not recommended):
@@ -261,9 +273,4 @@ PacCrypt/
 ├── start_prod.sh
 ```
 
----
-
-## 📄 License
-
-MIT © [TySP-Dev](https://github.com/TySP-Dev)
 
