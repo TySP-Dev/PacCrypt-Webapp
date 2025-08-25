@@ -7,7 +7,7 @@
 > User discretion is advised.
 
 **PacCrypt** is used for text encoding and decoding (using a basic Cypher), text and file encrypting and decrypting (using AES-GCM more algorithms coming) — built with Flask, JavaScript, and AES-GCM encryption.  
-Built in admin control panel, GitHub updater, and a Pac-Man __like__ game! 🕹️
+Built in admin control panel, GitHub updater, and a Pac-Man <ins>like</ins> game! 🕹️
 
 ---
 
@@ -24,7 +24,7 @@ Built in admin control panel, GitHub updater, and a Pac-Man __like__ game! 🕹�
 - 🔐 AES Encryption for Text & Files
 - 📁 PacShare for Encrypted File Sharing
 - 🔑 Random Password Generator
-- 🎮 Pac-Man __Like__ Game — type `pacman` into input
+- 🎮 Pac-Man <ins>Like</ins> Game — type `pacman` into input
 - 🧾 Admin Panel:
   - Site map with live route list
   - Server restart & GitHub update button
@@ -83,7 +83,7 @@ Visit http://hosts_public_ip:5000 - If you are **not** on the host system but on
 
 - Click Generate
 - Boom a Password
-- **Note:** This is also used as a seed generator for the Pac-Man __like__ game
+- **Note:** This is also used as a seed generator for the Pac-Man <ins>like</ins> game
 
 ### 🔐 Encrypt & Decrypt
 
@@ -272,5 +272,6 @@ PacCrypt/
 ├── start_dev.sh
 ├── start_prod.sh
 ```
+
 
 
