@@ -71,8 +71,8 @@ Then run:
   ./start_prod.sh
   ```
 
-Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000) - If you **are** on the host system
-Visit http://hosts_private_ip - If you are **not** on the host system but on the same network
+Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000) - If you **are** on the host system<p/>
+Visit http://hosts_private_ip - If you are **not** on the host system but on the same network<p/>
 Visit http://hosts_public_ip:5000 - If you are **not** on the host system but on a different network
 
 ---
@@ -272,6 +272,7 @@ PacCrypt/
 ├── start_dev.sh
 ├── start_prod.sh
 ```
+
 
 
 
