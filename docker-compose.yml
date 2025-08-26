@@ -5,7 +5,7 @@ services:
     build: .
     container_name: paccrypt
     ports:
-      - "5001:5000"
+      - "5000:5000"
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -19,4 +19,5 @@ services:
 networks:
 
   shared_internal:
+
     external: true
