@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import sys
+import platform
 
 APP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app.py"))
 
@@ -14,13 +15,22 @@ def log(msg):
 def start_dev():
     env = os.environ.copy()
     env["PRODUCTION"] = "false"
-    return subprocess.Popen(
-        ["python3", APP_PATH],
-        env=env,
-        preexec_fn=os.setsid,
-        stdout=sys.stdout,
-        stderr=sys.stderr
-    )
+    
+    if platform.system() == "Windows":
+        return subprocess.Popen(
+            ["python", APP_PATH],
+            env=env,
+            stdout=sys.stdout,
+            stderr=sys.stderr
+        )
+    else:
+        return subprocess.Popen(
+            ["python3", APP_PATH],
+            env=env,
+            preexec_fn=os.setsid,
+            stdout=sys.stdout,
+            stderr=sys.stderr
+        )
 
 def main():
     log("[*] Starting PacCrypt in DEVELOPMENT mode...")

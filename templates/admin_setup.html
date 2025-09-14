@@ -45,6 +45,15 @@
             <form method="POST">
                 <input type="text" name="username" placeholder="Username" required />
                 <input type="password" name="password" placeholder="Password" required />
+                
+                <!-- 2FA Option -->
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="enable_2fa" id="enable-2fa" />
+                        Enable Two-Factor Authentication (2FA) - Adds extra security using TOTP apps like Google Authenticator, Authy, etc.
+                    </label>
+                </div>
+                
                 <div class="button-group mt-3">
                     <button type="submit">Set Credentials</button>
                 </div>

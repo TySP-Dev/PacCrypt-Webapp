@@ -1,39 +1,38 @@
-import { deriveKey } from "./encryption.js";  // assuming shared deriveKey()
-
-const SALT_LENGTH = 16;
-const IV_LENGTH = 12;
-const KEY_LENGTH = 256;
+/**
+ * File operations using the new Python backend APIs
+ */
 
 /**
- * Encrypts a full file and downloads the encrypted version.
+ * Encrypts a full file using the backend API and downloads the encrypted version.
  */
 export async function encryptFile(fileInput, password) {
     const file = fileInput.files[0];
     if (!file) return;
 
+    const algorithm = document.getElementById("algorithm")?.value || "aes_cbc";
+
     try {
-        const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-        const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-        const key = await deriveKey(password, salt);
-        const fileBuffer = new Uint8Array(await file.arrayBuffer());
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('enc_password', password);
+        formData.append('algorithm', algorithm);
 
-        const ciphertext = await crypto.subtle.encrypt(
-            { name: "AES-GCM", iv },
-            key,
-            fileBuffer
-        );
+        const response = await fetch('/api/encrypt', {
+            method: 'POST',
+            body: formData
+        });
 
-        const ctBytes = new Uint8Array(ciphertext);
-        const result = new Uint8Array(salt.length + iv.length + ctBytes.length);
-        result.set(salt);
-        result.set(iv, salt.length);
-        result.set(ctBytes, salt.length + iv.length);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
 
-        const blob = new Blob([result], { type: "application/octet-stream" });
+        // Download the encrypted file
+        const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = file.name + ".encrypted";
+        a.download = `${file.name}.${algorithm}.encrypted`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -43,28 +42,43 @@ export async function encryptFile(fileInput, password) {
     }
 }
 
+/**
+ * Decrypts a file using the backend API and downloads the decrypted version.
+ */
 export async function decryptFile(fileInput, password) {
     const file = fileInput.files[0];
     if (!file) return;
 
     try {
-        const data = new Uint8Array(await file.arrayBuffer());
-        const salt = data.slice(0, SALT_LENGTH);
-        const iv = data.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-        const ciphertext = data.slice(SALT_LENGTH + IV_LENGTH);
-        const key = await deriveKey(password, salt);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('enc_password', password);
 
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv },
-            key,
-            ciphertext
-        );
+        const response = await fetch('/api/decrypt', {
+            method: 'POST',
+            body: formData
+        });
 
-        const blob = new Blob([decrypted], { type: "application/octet-stream" });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
+        // Download the decrypted file
+        const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = file.name.replace(".encrypted", "");
+        
+        // Clean up filename - remove algorithm-specific extensions
+        let filename = file.name;
+        const algorithms = ["aes_cbc", "aes_gcm", "xchacha", "rsa_hybrid"];
+        for (const algo of algorithms) {
+            filename = filename.replace(`.${algo}.encrypted`, "");
+        }
+        filename = filename.replace(".encrypted", "");
+        
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -74,89 +88,3 @@ export async function decryptFile(fileInput, password) {
     }
 }
 
-// ===== File Processing =====
-async function processFile(file, password, isEncrypt) {
-    const chunks = [];
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    let processedChunks = 0;
-
-    for (let start = 0; start < file.size; start += CHUNK_SIZE) {
-        const chunk = file.slice(start, start + CHUNK_SIZE);
-        const arrayBuffer = await chunk.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        const processedChunk = await processChunk(uint8Array, password, isEncrypt);
-        chunks.push(processedChunk);
-        
-        processedChunks++;
-        updateProgress(processedChunks, totalChunks);
-    }
-
-    return chunks;
-}
-
-async function processChunk(data, password, isEncrypt) {
-    const payload = {
-        "encryption-type": "advanced",
-        operation: isEncrypt ? "encrypt" : "decrypt",
-        message: Array.from(data).join(','),
-        password: password
-    };
-
-    const response = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    return new Uint8Array(result.result.split(',').map(Number));
-}
-
-// ===== File Download =====
-function downloadEncryptedFile(chunks, originalName) {
-    const blob = new Blob(chunks, { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = originalName + '.encrypted';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function downloadDecryptedFile(chunks, originalName) {
-    const blob = new Blob(chunks, { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = originalName.replace('.encrypted', '');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// ===== Progress Tracking =====
-function updateProgress(processed, total) {
-    const progressBar = document.getElementById("file-progress");
-    const progressText = document.getElementById("file-progress-text");
-    
-    if (progressBar && progressText) {
-        const percent = Math.round((processed / total) * 100);
-        progressBar.style.width = percent + "%";
-        progressText.textContent = `Processing: ${percent}%`;
-        
-        if (processed === total) {
-            setTimeout(() => {
-                progressBar.style.width = "0%";
-                progressText.textContent = "";
-            }, 1000);
-        }
-    }
-}

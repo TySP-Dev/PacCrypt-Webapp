@@ -43,6 +43,55 @@
             </div>
         </section>
 
+        <!-- Key Management Section -->
+        <section id="key-pairs-section" class="card form-group">
+            <h2>Key Management</h2>
+            <p style="color: #ccc; font-size: 0.9em; margin-bottom: 15px;">
+                Manage Key Pairs for the RSA Hybrid Algorithm.
+            </p>
+
+            <!-- Key Status Indicators -->
+            <div class="form-group">
+                <h3 style="margin-bottom: 10px; color: #00ff99;">Key Status</h3>
+                <div id="key-status-indicators" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="padding: 10px; border: 2px solid #333; border-radius: 5px; text-align: center;">
+                        <div id="public-key-indicator" style="color: #ff6b6b; font-weight: bold;">🔓 No Public Key</div>
+                        <div style="font-size: 0.8em; color: #888;">For Encryption</div>
+                    </div>
+                    <div style="padding: 10px; border: 2px solid #333; border-radius: 5px; text-align: center;">
+                        <div id="private-key-indicator" style="color: #ff6b6b; font-weight: bold;">🔐 No Private Key</div>
+                        <div style="font-size: 0.8em; color: #888;">For Decryption</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Management Buttons -->
+            <div class="form-group">
+                <div class="button-group">
+                    <button type="button" id="generate-keypair-main-btn">Generate & Download Key Pair</button>
+                    <button type="button" id="load-public-main-btn">Load Public Key</button>
+                    <button type="button" id="load-private-main-btn">Load Private Key</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button type="button" id="clear-keys-btn" class="danger-button">Clear All Keys</button>
+                    <button type="button" id="download-keys-btn" style="display: none;">Download Current Keys</button>
+                </div>
+            </div>
+
+            <!-- Hidden File Inputs -->
+            <input type="file" id="public-key-main-input" accept=".pub,.pem" style="display: none;">
+            <input type="file" id="private-key-main-input" accept=".key,.pem" style="display: none;">
+
+            <!-- Key Information Display -->
+            <div id="key-info-display" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #00ff99; border-radius: 5px; background-color: #001100;">
+                <h4 style="color: #00ff99; margin-top: 0;">Loaded Keys Information</h4>
+                <div id="key-info-content" style="font-family: monospace; font-size: 0.8em; color: #ccc;"></div>
+            </div>
+
+            <!-- Copy Feedback -->
+            <div id="keypair-feedback" class="copy-feedback">Keys generated and downloaded!</div>
+        </section>
+
         <!-- Pacman Game Section -->
         <section id="pacman-section" class="card" style="display: none;">
             <div class="pacman-wrapper">
@@ -59,13 +108,32 @@
         <section id="encoding-section" class="card form-group">
             <h2>Encrypt & Decrypt</h2>
             <form id="crypto-form" class="form-group">
-                <!-- Encryption Type Selection -->
-                <div class="form-group">
-                    <label for="encryption-type">Encryption Type:</label>
-                    <select id="encryption-type">
-                        <option value="basic">Basic Cipher</option>
-                        <option value="advanced" selected>Advanced AES</option>
+                <!-- Algorithm Selection -->
+                <div class="form-group" id="algorithm-selection">
+                    <label for="algorithm">Encryption Algorithm:</label>
+                    <select id="algorithm">
+                        <!-- Options populated dynamically by JavaScript -->
                     </select>
+                </div>
+
+                <!-- Key Pair Management (for RSA/PQ algorithms) -->
+                <div class="form-group" id="keypair-section" style="display: none;">
+                    <div class="keypair-info">
+                        <p><strong>🔐 Key Pair Required:</strong></p>
+                        <p><strong>For Encryption:</strong> Use Public Key (.pub file)</p>
+                        <p><strong>For Decryption:</strong> Use Private Key (.key file)</p>
+                    </div>
+                    <div style="padding: 10px; border: 1px solid #ffaa00; border-radius: 5px; background-color: #221100; margin: 10px 0;">
+                        <p style="color: #ffaa00; margin: 0; text-align: center;">
+                            <strong>💡 Manage your keys in the "Key Pairs Management" section above</strong>
+                        </p>
+                    </div>
+                    
+                    <!-- Key status indicators -->
+                    <div id="key-status" style="margin-top: 10px;">
+                        <div id="public-key-status" style="display: none;">✅ Public key loaded</div>
+                        <div id="private-key-status" style="display: none;">✅ Private key loaded</div>
+                    </div>
                 </div>
 
                 <!-- Operation Toggle -->
@@ -90,7 +158,7 @@
                 </div>
 
                 <!-- File Input Section -->
-                <div id="file-section" class="form-group" style="display: none;">
+                <div id="file-section" class="form-group">
                     <input type="file" id="file-input" />
                     <button type="button" id="remove-file-btn">Remove File</button>
                 </div>
@@ -144,10 +212,49 @@
                 <button type="button" id="copy-share-btn">Copy Link</button>
                 <div id="shared-link-feedback" class="copy-feedback">Link copied to clipboard!</div>
             </div>
+
+            <!-- 2FA Setup Container (initially hidden) -->
+            <div id="tfa-setup-container" style="display: none; margin-top: 20px; padding: 15px; border: 2px solid #ffaa00; border-radius: 8px; background-color: #332200;">
+                <h3 style="color: #ffaa00; margin-top: 0;">🔒 Important: Set Up 2FA Now!</h3>
+                <p style="color: #ccc;">You enabled 2FA for this file. <strong>Scan this QR code NOW</strong> with your authenticator app:</p>
+                <div style="text-align: center; margin: 15px 0;">
+                    <img id="tfa-qr-image" src="" alt="2FA QR Code" style="max-width: 200px; border: 2px solid #00ff99;" />
+                </div>
+                
+                <!-- 2FA String Container -->
+                <div style="margin-top: 15px; padding: 10px; border: 1px solid #00ff99; border-radius: 5px; background-color: #001100;">
+                    <p style="color: #00ff99; margin: 5px 0; font-size: 0.9em;"><strong>Or manually enter this string:</strong></p>
+                    <div class="share-link-container" style="margin: 0;">
+                        <input type="text" id="tfa-string" readonly style="flex: 1; background: #111; color: #00ff99; border: 1px solid #333; padding: 8px; font-family: monospace; font-size: 0.8em;" />
+                        <button type="button" id="copy-tfa-string-btn">Copy String</button>
+                        <div id="tfa-string-feedback" class="copy-feedback">2FA string copied to clipboard!</div>
+                    </div>
+                </div>
+                
+                <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">⚠️ SAVE THIS QR CODE OR STRING NOW! It will not be shown again for security reasons.</p>
+                <p style="color: #ccc; font-size: 0.9em;">Recommended apps: Google Authenticator, Authy, Microsoft Authenticator</p>
+                <button type="button" onclick="closeTwoFactorSetup()">I've Saved the 2FA Information</button>
+            </div>
             <form method="POST" enctype="multipart/form-data" class="form-group" id="upload-form">
+                <!-- Algorithm Selection for PacShare -->
+                <div class="form-group">
+                    <label for="share-algorithm">Encryption Algorithm:</label>
+                    <select id="share-algorithm" name="algorithm">
+                        <!-- Options populated dynamically by JavaScript -->
+                    </select>
+                </div>
                 <input type="file" name="file" id="upload-file" required />
                 <input type="password" name="enc_password" placeholder="Encryption/Decryption Password" required />
                 <input type="password" name="pickup_password" placeholder="Pickup Password" required />
+                
+                <!-- 2FA Option -->
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="enable_2fa" id="enable-2fa" />
+                        Enable 2FA (TOTP) - Adds extra security with Google Authenticator, Authy, etc.
+                    </label>
+                </div>
+                
                 <div class="button-group">
                     <button type="submit">Upload and Generate Link</button>
                 </div>
@@ -178,10 +285,16 @@
                             shareLink.textContent = data.pickup_url;
                             shareLinkContainer.style.display = 'flex';
                             
+                            // If 2FA is enabled, show the QR code immediately
+                            if (data.qr_code_url) {
+                                showTwoFactorSetup(data.qr_code_url, data.service_name, data.totp_secret);
+                            }
+                            
                             // Clear form fields
                             document.getElementById('upload-file').value = '';
                             document.getElementsByName('enc_password')[0].value = '';
                             document.getElementsByName('pickup_password')[0].value = '';
+                            document.getElementById('enable-2fa').checked = false;
                             
                             // Scroll to the share link
                             shareLinkContainer.scrollIntoView({ behavior: 'smooth' });
@@ -190,6 +303,250 @@
                         alert('Error uploading file: ' + error.message);
                     }
                 });
+
+                // 2FA Setup Functions
+                function showTwoFactorSetup(qrCodeUrl, serviceName, totpSecret) {
+                    const container = document.getElementById('tfa-setup-container');
+                    const qrImage = document.getElementById('tfa-qr-image');
+                    const tfaString = document.getElementById('tfa-string');
+                    
+                    qrImage.src = qrCodeUrl;
+                    tfaString.value = totpSecret;
+                    container.style.display = 'block';
+                    
+                    // Scroll to the 2FA setup
+                    container.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                function closeTwoFactorSetup() {
+                    const container = document.getElementById('tfa-setup-container');
+                    container.style.display = 'none';
+                }
+
+                // Copy share link functionality
+                document.getElementById('copy-share-btn').addEventListener('click', () => {
+                    const shareLink = document.getElementById('share-link');
+                    const feedback = document.getElementById('shared-link-feedback');
+                    
+                    navigator.clipboard.writeText(shareLink.href).then(() => {
+                        feedback.style.display = 'block';
+                        feedback.classList.add('show');
+                        
+                        setTimeout(() => {
+                            feedback.classList.remove('show');
+                            setTimeout(() => {
+                                feedback.style.display = 'none';
+                            }, 300);
+                        }, 2000);
+                    });
+                });
+
+                // Copy 2FA string functionality
+                document.getElementById('copy-tfa-string-btn').addEventListener('click', () => {
+                    const tfaString = document.getElementById('tfa-string');
+                    const feedback = document.getElementById('tfa-string-feedback');
+                    
+                    navigator.clipboard.writeText(tfaString.value).then(() => {
+                        feedback.style.display = 'block';
+                        feedback.classList.add('show');
+                        
+                        setTimeout(() => {
+                            feedback.classList.remove('show');
+                            setTimeout(() => {
+                                feedback.style.display = 'none';
+                            }, 300);
+                        }, 2000);
+                    });
+                });
+
+                // Centralized Key Pairs Management
+                let globalKeys = {
+                    publicKey: null,
+                    privateKey: null,
+                    algorithm: 'rsa_hybrid'
+                };
+
+                function updateKeyStatusIndicators() {
+                    const publicIndicator = document.getElementById('public-key-indicator');
+                    const privateIndicator = document.getElementById('private-key-indicator');
+                    const keyInfoDisplay = document.getElementById('key-info-display');
+                    const keyInfoContent = document.getElementById('key-info-content');
+                    const downloadKeysBtn = document.getElementById('download-keys-btn');
+
+                    // Update public key indicator
+                    if (globalKeys.publicKey) {
+                        publicIndicator.style.color = '#00ff99';
+                        publicIndicator.textContent = '🔓 Public Key Loaded';
+                        document.getElementById('public-key-status').style.display = 'block';
+                    } else {
+                        publicIndicator.style.color = '#ff6b6b';
+                        publicIndicator.textContent = '🔓 No Public Key';
+                        document.getElementById('public-key-status').style.display = 'none';
+                    }
+
+                    // Update private key indicator
+                    if (globalKeys.privateKey) {
+                        privateIndicator.style.color = '#00ff99';
+                        privateIndicator.textContent = '🔐 Private Key Loaded';
+                        document.getElementById('private-key-status').style.display = 'block';
+                    } else {
+                        privateIndicator.style.color = '#ff6b6b';
+                        privateIndicator.textContent = '🔐 No Private Key';
+                        document.getElementById('private-key-status').style.display = 'none';
+                    }
+
+                    // Show/hide key info and download button
+                    if (globalKeys.publicKey || globalKeys.privateKey) {
+                        keyInfoDisplay.style.display = 'block';
+                        downloadKeysBtn.style.display = 'inline-block';
+                        
+                        let info = `Algorithm: ${globalKeys.algorithm.toUpperCase()}\n`;
+                        if (globalKeys.publicKey) {
+                            const pubPreview = globalKeys.publicKey.substring(0, 50) + '...';
+                            info += `Public Key: ${pubPreview}\n`;
+                        }
+                        if (globalKeys.privateKey) {
+                            const privPreview = globalKeys.privateKey.substring(0, 50) + '...';
+                            info += `Private Key: ${privPreview}\n`;
+                        }
+                        keyInfoContent.textContent = info;
+                    } else {
+                        keyInfoDisplay.style.display = 'none';
+                        downloadKeysBtn.style.display = 'none';
+                    }
+                }
+
+                // Generate key pair
+                document.getElementById('generate-keypair-main-btn').addEventListener('click', async () => {
+                    const algorithm = 'rsa_hybrid';
+                    
+                    try {
+                        const response = await fetch('/api/generate-keypair', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ algorithm: algorithm })
+                        });
+
+                        const data = await response.json();
+                        if (response.ok) {
+                            globalKeys.publicKey = data.public_key;
+                            globalKeys.privateKey = data.private_key;
+                            globalKeys.algorithm = algorithm;
+
+                            // Download keys
+                            downloadKeyPair(data.public_key, data.private_key, algorithm);
+                            
+                            updateKeyStatusIndicators();
+                            showKeypairFeedback('Keys generated and downloaded!');
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    } catch (error) {
+                        alert('Failed to generate key pair: ' + error.message);
+                    }
+                });
+
+                // Load public key
+                document.getElementById('load-public-main-btn').addEventListener('click', () => {
+                    document.getElementById('public-key-main-input').click();
+                });
+
+                document.getElementById('public-key-main-input').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            globalKeys.publicKey = event.target.result;
+                            updateKeyStatusIndicators();
+                            showKeypairFeedback('Public key loaded!');
+                        };
+                        reader.readAsText(file);
+                    }
+                });
+
+                // Load private key
+                document.getElementById('load-private-main-btn').addEventListener('click', () => {
+                    document.getElementById('private-key-main-input').click();
+                });
+
+                document.getElementById('private-key-main-input').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            globalKeys.privateKey = event.target.result;
+                            updateKeyStatusIndicators();
+                            showKeypairFeedback('Private key loaded!');
+                        };
+                        reader.readAsText(file);
+                    }
+                });
+
+                // Clear keys
+                document.getElementById('clear-keys-btn').addEventListener('click', () => {
+                    if (confirm('Are you sure you want to clear all loaded keys?')) {
+                        globalKeys.publicKey = null;
+                        globalKeys.privateKey = null;
+                        updateKeyStatusIndicators();
+                        showKeypairFeedback('All keys cleared!');
+                    }
+                });
+
+                // Download current keys
+                document.getElementById('download-keys-btn').addEventListener('click', () => {
+                    if (globalKeys.publicKey || globalKeys.privateKey) {
+                        downloadKeyPair(globalKeys.publicKey, globalKeys.privateKey, globalKeys.algorithm);
+                        showKeypairFeedback('Keys downloaded!');
+                    }
+                });
+
+                function downloadKeyPair(publicKey, privateKey, algorithm) {
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    
+                    if (publicKey) {
+                        const pubBlob = new Blob([publicKey], { type: 'text/plain' });
+                        const pubUrl = URL.createObjectURL(pubBlob);
+                        const pubLink = document.createElement('a');
+                        pubLink.href = pubUrl;
+                        pubLink.download = `${algorithm}_public_key_${timestamp}.pub`;
+                        pubLink.click();
+                        URL.revokeObjectURL(pubUrl);
+                    }
+
+                    if (privateKey) {
+                        const privBlob = new Blob([privateKey], { type: 'text/plain' });
+                        const privUrl = URL.createObjectURL(privBlob);
+                        const privLink = document.createElement('a');
+                        privLink.href = privUrl;
+                        privLink.download = `${algorithm}_private_key_${timestamp}.key`;
+                        privLink.click();
+                        URL.revokeObjectURL(privUrl);
+                    }
+                }
+
+                function showKeypairFeedback(message) {
+                    const feedback = document.getElementById('keypair-feedback');
+                    feedback.textContent = message;
+                    feedback.style.display = 'block';
+                    feedback.classList.add('show');
+                    
+                    setTimeout(() => {
+                        feedback.classList.remove('show');
+                        setTimeout(() => {
+                            feedback.style.display = 'none';
+                        }, 300);
+                    }, 2000);
+                }
+
+                // Make global keys available to other scripts
+                window.getGlobalKeys = () => globalKeys;
+                window.setGlobalKeys = (keys) => {
+                    globalKeys = { ...globalKeys, ...keys };
+                    updateKeyStatusIndicators();
+                };
+
+                // Initialize key status
+                updateKeyStatusIndicators();
             </script>
 
             <!-- File Limits Information -->

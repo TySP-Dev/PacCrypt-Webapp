@@ -1,115 +1,186 @@
-# PacCrypt
+# PacCrypt 🔐
 
-**PacCrypt** is a secure, feature-rich web app for encrypting and decrypting text and files — built with Flask, JavaScript, and AES-GCM encryption.  
-Now with an admin control panel, GitHub updater, and a built-in Pac-Man easter egg! 🕹️
+**PacCrypt** is a modern, secure web application for encrypting and decrypting text and files using multiple encryption algorithms. Built with Flask and featuring a comprehensive REST API, modular encryption engines, and advanced security features including 2FA support.
+
+> [!IMPORTANT]
+> This document contains AI generated pieces that have not been reviewed yet.
+> Next push will contain human oversite on the documentation.
+
+**🌐 Official Instance**: [paccrypt.unnaturalll.dev](https://paccrypt.unnaturalll.dev)
 
 ---
 
 ## ✨ Features
 
-- 🔒 Basic and Advanced Encryption for Text & Files
-- 📁 Secure File Uploads with Pickup Passwords
-- 🔑 Random Password Generator
-- 🎮 Hidden Pac-Man Game — type `pacman` to play
-- 🧠 Smart UI: Auto-switches input sections, toggles encryption labels
-- 📋 Clipboard Copy Feedback with styled status boxes
-- 🧾 Admin Panel:
-  - Site map with live route list
-  - Server restart & GitHub update button
-  - Secure admin credential management
-  - Server logs & upload cleanup
-- 🧩 System Settings Page for upload config
-- 📜 Custom 403, 404, and 500 Error Pages
-- 🤖 robots.txt and /sitemap for crawlers
-- 📱 Mobile-Responsive UI
+### 🔒 **Multi-Algorithm Encryption**
+- **AES-GCM**: Text encryption with authenticated encryption
+- **AES-CBC**: Text and file encryption with HMAC authentication  
+- **XChaCha20-Poly1305**: Modern stream cipher for text and files
+- **RSA Hybrid**: RSA-4096 with AES hybrid encryption for text and files
+
+### 🌐 **Comprehensive API**
+- RESTful API endpoints for all encryption operations
+- Text and file encryption/decryption
+- Key pair generation for RSA hybrid
+- PacShare file sharing with secure pickup URLs
+- Full API documentation (see [API.md](API.md))
+
+### 📁 **PacShare - Secure File Sharing**
+- End-to-end encrypted file uploads
+- Dual-password system (pickup + encryption)
+- Optional 2FA with TOTP codes
+- QR code generation for 2FA setup
+- Automatic file expiration
+- Secure pickup URLs with one-time download
+
+### 🛡️ **Advanced Security**
+- Admin panel with 2FA support
+- Encrypted admin credentials and logs
+- Secure session management
+- PBKDF2 key derivation with 200,000 iterations
+- Cryptographically secure random ID generation
+
+### 🎮 **Built-in Entertainment**
+- Hidden Pac-Man game (type `pacman` to play)
+- Arrow key and swipe controls
+- Retro gaming experience with authentic sounds
+
+### 🧾 **Admin Control Panel**
+- Real-time server monitoring and statistics
+- GitHub auto-update functionality
+- Upload management and cleanup
+- Server restart capabilities
+- Development/Production mode switching
+- Comprehensive audit logging
+
+### 📱 **Modern UI/UX**
+- Fully responsive mobile design
+- Smart UI state management
+- Clipboard integration
+- Visual feedback for all operations
+- Custom error pages (403, 404, 500)
+- SEO-optimized with sitemap and robots.txt
 
 ---
 
-## 👨‍💻 Installation
+## 🚀 Quick Start
 
-### 📋 Prerequisites
+### Prerequisites
 
-- Python 3.7+
-- Flask 3+
-- Cryptography 42+
-- Waitress 2.1+
-- Git (For update feature)
-- Nginx (Recommended)
-- Cockpit (Recommended if hosted on **Linux**)
+- **Python 3.8+** (3.10+ recommended)
+- **Git** (for updates and installation)
+- **pip** package manager
 
----
-
-### ⚡ Quick Setup
+### Installation
 
 ```bash
-git clone https://github.com/TySP-Dev/PacCrypt.git
-cd paccrypt-webapp-final
+# Clone the repository
+git clone https://github.com/TySP-Dev/PacCrypt-Webapp.git
+cd PacCrypt-Webapp
+
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
+
+# Activate virtual environment
+# On Linux/macOS:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r application_data/requirements.txt
 ```
 
-Then run:
+### Running the Application
 
-- Development Mode:
-  ```bash
-  ./start_dev.sh  #<-- start_dev.bat (Windows)
-  ```
+#### Development Mode
+```bash
+# Linux/macOS
+python application_data/control_scripts/start_dev.py
 
-- Production Mode:
-  ```bash
-  ./start_prod.sh  #<-- start_prod.bat (Windows)
-  ```
+# Windows  
+python application_data\control_scripts\start_dev.py
+```
 
-Visit [http://127.0.0.1:5000](http://127.0.0.1:5000) or [http://localhost:5000](http://localhost:5000) - *If* you **are** on the host system
-Visit http://hosts_private_ip - *If* you are **not** on the host system
+#### Production Mode
+```bash
+# Linux/macOS
+python application_data/control_scripts/start_prod.py
+
+# Windows
+python application_data\control_scripts\start_prod.py
+```
+
+### Access the Application
+
+- **Local access**: http://127.0.0.1:5000
+- **Network access**: http://YOUR_IP_ADDRESS:5000
+- **Admin setup**: http://127.0.0.1:5000/admin-setup (first-time only)
 
 ---
 
-## 🧭 Navigation & Usage
+## 📖 Usage Guide
 
-### 🔑 Generate Passwords
+### 🔐 Text Encryption/Decryption
 
-- Click Generate
-- Then hit `📋 Copy Password`
-- **Note:** This is also used as a seed generator for the Pac-Man *like* game
+1. **Select Algorithm**: Choose from AES-GCM, AES-CBC, XChaCha20, or RSA Hybrid
+2. **Enter Text**: Type or paste your message
+3. **Set Password**: Enter a strong encryption password
+4. **For RSA**: Generate key pair first if using RSA Hybrid
+5. **Execute**: Click Encrypt/Decrypt
+6. **Copy Result**: Use the copy button for easy sharing
 
-### 🔐 Encrypt & Decrypt
+### 📁 File Operations
 
-- Choose between Basic Cipher or Advanced AES
-- Select mode using toggle (Encrypt/Decrypt)
-- Type your message or upload a file
-- Enter password (Advanced AES)
-- Hit Execute
-- Then hit `📋 Copy Output`
+1. **Upload File**: Select file using the file picker
+2. **Choose Algorithm**: Pick AES-CBC, XChaCha20, or RSA Hybrid (AES-GCM not supported for files)
+3. **Set Password**: Enter encryption password
+4. **Process**: File will be encrypted/decrypted and downloaded automatically
 
-### 📤 Share Files
+### 📤 PacShare - Secure File Sharing
 
-- Upload a file with two passwords:
-  - Encryption password
-  - Pickup password
-- Get a shareable URL and click `📋 Copy Link`
+1. **Upload File**: Select file to share
+2. **Set Passwords**: 
+   - **Encryption Password**: Encrypts the file content
+   - **Pickup Password**: Required to access the download page
+3. **Optional 2FA**: Enable for additional security
+4. **Share URL**: Copy the generated pickup URL
+5. **Recipient Access**: They need both passwords (and 2FA code if enabled)
 
-### 🎮 Pac-Man *like* Game
+### 🎮 Hidden Pac-Man Game
 
-- Type `pacman` in the input box
-- Game appears with `Restart` and `Exit` buttons
-- Arrow key and Swipe controls 🕹️
-- Game restarts and a new seed is generated once all dots are eaten
+- Type `pacman` in any text input
+- Use arrow keys or swipe gestures to play
+- Authentic retro gaming experience with sound effects
 
 ---
 
 ## 🛠️ Admin Panel
 
-Visit `/adminpage` after setting up credentials at `/admin-setup`.
+Access the admin panel at `/adminpage` after initial setup at `/admin-setup`.
 
-Features:
-- 🔄 Restart server
-- 🔃 Update from GitHub (git pull)
-- 🧽 Clear uploads
-- 🔐 Change admin password
-- 📝 View logs
-- ⚙️ Adjust upload settings
+### 🔑 Setup Process
+1. Visit `/admin-setup` on first run
+2. Create admin username and password
+3. Optionally enable 2FA for enhanced security
+4. Login at `/admin-login`
+
+### 🎛️ Admin Features
+- **📊 Server Monitoring**: Real-time statistics and uptime
+- **🔄 Server Control**: Restart, switch dev/prod modes
+- **📋 Route Management**: View all available endpoints
+- **🔃 GitHub Integration**: Auto-update from repository
+- **🧹 File Management**: Clear uploads and expired files
+- **🔐 Security**: Change password, manage 2FA
+- **📝 Audit Logs**: View encrypted activity logs
+- **⚙️ Settings**: Configure upload limits and file retention
+
+### 🔒 Security Features
+- Encrypted credential storage
+- TOTP-based 2FA support
+- QR code generation for authenticator apps
+- Secure session management
+- Encrypted audit logging
 
 ---
 
@@ -221,49 +292,115 @@ server {
 ```
 ---
 
+## 📋 API Integration
+
+PacCrypt provides a comprehensive REST API for programmatic access. See the detailed [API Documentation](API.md) for:
+
+- **Encryption Operations**: Text and file encryption/decryption
+- **Key Management**: RSA key pair generation
+- **PacShare Integration**: Programmatic file sharing
+- **Algorithm Discovery**: List available encryption methods
+
+### Quick API Example
+
+```bash
+# Encrypt text using AES-GCM
+curl -X POST "https://paccrypt.unnaturalll.dev/api/encrypt" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello World!", "password": "secret123", "algorithm": "aes_gcm"}'
+
+# Upload file via PacShare
+curl -X POST "https://paccrypt.unnaturalll.dev/api/pacshare" \
+  -F "file=@document.pdf" \
+  -F "enc_password=encrypt123" \
+  -F "pickup_password=pickup123" \
+  -F "algorithm=aes_cbc"
+```
+
 ## 🗂️ Project Structure
 
 ```
-PacCrypt/
-├── app.py
-├── requirements.txt
-├── README.md
-├── templates/
-│   ├── index.html
-│   ├── 404.html
-│   └── 403.html
-│   └── 500.html
-│   └── admin.html
-│   └── admin_login.html
-│   └── admin_settings.html
-│   └── admin_setup.html
-│   └── pickup.html
-├── static/
-│   ├── css/
-│   │   └── styles.css
-│   ├── js/
-│   │   └── ui.js
-│   │   └── pacman.js
-│   │   └── main.js
-│   │   └── fileops.js
-│   │   └── encryption.js
-│   ├── img/
-│   │   └── PacCrypt.png
-│   │   └── Github_logo.png
-│   │   └── sitemap.png
-│   ├── fonts/
-│   │   └── PressStart2P-Regular.ttf
-│   └── audio/
-│       └── chomp.mp3
-├── start_dev.bat
-├── start_prod.bat
-├── start_dev.sh
-├── start_prod.sh
+PacCrypt-Webapp/
+├── app.py                          # Main Flask application
+├── README.md                       # This file
+├── ROADMAP.md                     # Development roadmap
+├── API.md                         # API documentation
+├── application_data/              # Application configuration
+│   ├── control_scripts/           # Server management scripts
+│   │   ├── start_dev.py          # Development mode starter
+│   │   ├── start_prod.py         # Production mode starter
+│   │   ├── restart_dev.py        # Development restart
+│   │   ├── restart_prod.py       # Production restart
+│   │   └── stop.py               # Server stop script
+│   ├── requirements.txt          # Python dependencies
+│   ├── settings.json            # Application settings
+│   ├── admin_creds.json         # Encrypted admin credentials
+│   ├── admin_key.key           # Admin encryption key
+│   └── admin_logs.enc          # Encrypted audit logs
+├── paccrypt_algos/               # Encryption modules
+│   ├── __init__.py              # Package initialization
+│   ├── aes_cbc.py              # AES-CBC implementation
+│   ├── aes_gcm.py              # AES-GCM implementation
+│   ├── xchacha.py              # XChaCha20-Poly1305
+│   └── rsa_hybrid.py           # RSA hybrid encryption
+├── pacshare/                    # File upload storage
+│   ├── *.encrypted             # Encrypted uploaded files
+│   └── *.json                  # File metadata
+├── templates/                   # HTML templates
+│   ├── index.html              # Main interface
+│   ├── pickup.html             # File pickup page
+│   ├── admin*.html             # Admin panel pages
+│   └── error pages (403,404,500)
+└── static/                     # Static assets
+    ├── css/styles.css          # Application styling
+    ├── js/                     # JavaScript modules
+    ├── img/                    # Images and icons
+    ├── fonts/                  # Custom fonts
+    └── audio/                  # Sound effects
 ```
+
+---
+
+## 🔒 Security Considerations
+
+### ⚠️ Important Security Notes
+
+- **Password Strength**: Use strong, unique passwords for all operations
+- **2FA Recommended**: Enable 2FA for admin accounts and sensitive file shares
+- **HTTPS Required**: Always use HTTPS in production environments
+- **Regular Updates**: Keep dependencies updated for security patches
+- **Backup Strategy**: Implement regular backups of encrypted data
+
+### 🛡️ Encryption Details
+
+- **AES-256**: Industry standard symmetric encryption
+- **RSA-4096**: Strong asymmetric encryption for key exchange
+- **PBKDF2**: 200,000 iterations for key derivation
+- **Authenticated Encryption**: GCM and Poly1305 modes prevent tampering
+- **Secure Random**: Cryptographically secure random number generation
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned features and development priorities.
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📞 Support
+
+- **Documentation**: See [API.md](API.md) for API details
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Use GitHub Discussions for questions
+- **Official Instance**: [paccrypt.unnaturalll.dev](https://paccrypt.unnaturalll.dev)
 
 ---
 
 ## 📄 License
 
 MIT © [TySP-Dev](https://github.com/TySP-Dev)
+
+**🔐 Secure by design. Simple by choice. Powerful by nature.**
 

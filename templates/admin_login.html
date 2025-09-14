@@ -44,6 +44,15 @@
             <form method="POST">
                 <input type="text" name="username" placeholder="Username" required />
                 <input type="password" name="password" placeholder="Password" required />
+                
+                {% if requires_2fa %}
+                <!-- 2FA Code Input -->
+                <div class="form-group">
+                    <input type="text" name="totp_code" placeholder="2FA Code (6 digits)" pattern="[0-9]{6}" maxlength="6" required />
+                    <small style="color: #ccc;">Enter the 6-digit code from your authenticator app</small>
+                </div>
+                {% endif %}
+                
                 <div class="button-group mt-3">
                     <button type="submit">Log In</button>
                 </div>

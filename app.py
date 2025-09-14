@@ -24,6 +24,13 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.fernet import Fernet
+import pyotp
+import qrcode
+from io import BytesIO
+
+# ===== PacCrypt Algorithm Imports =====
+from paccrypt_algos import aes_cbc, aes_gcm, xchacha, rsa_hybrid
+# Post-quantum crypto removed for simplicity
 
 # ===== Application Configuration =====
 app = Flask(__name__)
@@ -35,13 +42,47 @@ ADMIN_CRED_FILE = 'application_data/admin_creds.json'
 ADMIN_KEY_FILE = 'application_data/admin_key.key'
 ADMIN_LOG_FILE = 'application_data/admin_logs.enc'
 SETTINGS_FILE = 'application_data/settings.json'
-ALPHABET = list('abcdefghijklmnopqrstuvwxyz')
 
 DEFAULT_SETTINGS = {
     "upload_folder": "pacshare",
     "max_file_age_days": 14,
     "max_file_size_bytes": 25 * 1024 * 1024 * 1024  # 25GB
 }
+
+# ===== Available Encryption Algorithms =====
+AVAILABLE_ALGORITHMS = {
+    "aes_cbc": {
+        "name": "AES-CBC",
+        "module": aes_cbc,
+        "supports_text": True,
+        "supports_file": True,
+        "description": "AES-256 with CBC mode and HMAC authentication"
+    },
+    "aes_gcm": {
+        "name": "AES-GCM", 
+        "module": aes_gcm,
+        "supports_text": True,
+        "supports_file": False,
+        "description": "AES-256 with GCM mode (authenticated encryption)"
+    },
+    "xchacha": {
+        "name": "XChaCha20-Poly1305",
+        "module": xchacha,
+        "supports_text": True,
+        "supports_file": True,
+        "description": "XChaCha20 stream cipher with Poly1305 authentication"
+    },
+    "rsa_hybrid": {
+        "name": "RSA Hybrid",
+        "module": rsa_hybrid,
+        "supports_text": True,
+        "supports_file": True,
+        "description": "RSA-4096 with AES hybrid encryption",
+        "requires_keypair": True
+    }
+}
+
+# Post-quantum algorithms removed
 
 # ===== Settings Management =====
 def load_settings():
@@ -77,14 +118,6 @@ def hash_password(password: str, salt: bytes) -> str:
     """Hash a password with salt for secure storage."""
     return base64.urlsafe_b64encode(derive_key(password, salt)).decode()
 
-def simple_encode(text: str) -> str:
-    """Basic Caesar cipher encryption."""
-    return ''.join(ALPHABET[(ALPHABET.index(c) + 3) % 26] if c in ALPHABET else c for c in text.lower())
-
-def simple_decode(text: str) -> str:
-    """Basic Caesar cipher decryption."""
-    return ''.join(ALPHABET[(ALPHABET.index(c) - 3) % 26] if c in ALPHABET else c for c in text.lower())
-
 def advanced_encrypt(plaintext: str, password: str) -> str:
     """Encrypt plaintext with AES-GCM and return base64-encoded result."""
     salt = os.urandom(16)
@@ -113,17 +146,23 @@ def load_admin_key():
     with open(ADMIN_KEY_FILE, 'rb') as f:
         return f.read()
 
-def encrypt_creds(username, password):
+def encrypt_creds(username, password, totp_secret=None):
     """Encrypt and store admin credentials."""
     key = load_admin_key()
     cipher = Fernet(key)
     salt = os.urandom(16)
     hashed_pw = hash_password(password, salt)
-    data = json.dumps({"u": username, "p": hashed_pw, "s": base64.b64encode(salt).decode()}).encode()
+    data = {
+        "u": username, 
+        "p": hashed_pw, 
+        "s": base64.b64encode(salt).decode(),
+        "totp_secret": totp_secret,
+        "2fa_enabled": totp_secret is not None
+    }
     with open(ADMIN_CRED_FILE, 'wb') as f:
-        f.write(cipher.encrypt(data))
+        f.write(cipher.encrypt(json.dumps(data).encode()))
 
-def check_creds(username, password):
+def check_creds(username, password, totp_code=None):
     """Verify admin credentials."""
     try:
         key = load_admin_key()
@@ -132,10 +171,50 @@ def check_creds(username, password):
             decrypted = cipher.decrypt(f.read())
         creds = json.loads(decrypted)
         salt = base64.b64decode(creds["s"])
-        return creds["u"] == username and creds["p"] == hash_password(password, salt)
+        
+        # Check username and password first
+        if not (creds["u"] == username and creds["p"] == hash_password(password, salt)):
+            return False
+            
+        # Check 2FA if enabled
+        if creds.get("2fa_enabled", False):
+            if not totp_code:
+                return False
+            totp_secret = creds.get("totp_secret")
+            if not totp_secret:
+                return False
+            totp = pyotp.TOTP(totp_secret)
+            if not totp.verify(totp_code, valid_window=1):
+                return False
+                
+        return True
     except Exception as e:
         print("[ERROR] check_creds failed:", e)
         return False
+
+def get_admin_2fa_status():
+    """Check if admin has 2FA enabled."""
+    try:
+        key = load_admin_key()
+        cipher = Fernet(key)
+        with open(ADMIN_CRED_FILE, 'rb') as f:
+            decrypted = cipher.decrypt(f.read())
+        creds = json.loads(decrypted)
+        return creds.get("2fa_enabled", False)
+    except Exception:
+        return False
+
+def get_admin_totp_secret():
+    """Get admin TOTP secret for QR code generation."""
+    try:
+        key = load_admin_key()
+        cipher = Fernet(key)
+        with open(ADMIN_CRED_FILE, 'rb') as f:
+            decrypted = cipher.decrypt(f.read())
+        creds = json.loads(decrypted)
+        return creds.get("totp_secret")
+    except Exception:
+        return None
 
 def log_admin_event(message: str):
     """Log admin actions securely."""
@@ -171,19 +250,21 @@ def cleanup_expired_files():
 # ===== Route Handlers =====
 @app.route("/", methods=["GET", "POST"])
 def index():
-    """Main application route handling encryption/decryption and file uploads."""
+    """Main application route handling file uploads."""
     if request.method == 'POST':
         if 'file' in request.files:
             return handle_file_upload(request)
         else:
-            return handle_text_operation(request)
-    return render_template("index.html", result="", password="", encryption_type="advanced", settings=settings)
+            return jsonify(error="Use /api/encrypt or /api/decrypt endpoints for text operations"), 400
+    return render_template("index.html", settings=settings)
 
 def handle_file_upload(request):
     """Process file upload and encryption."""
     file = request.files['file']
     enc_password = request.form.get('enc_password')
     pickup_password = request.form.get('pickup_password')
+    algorithm = request.form.get('algorithm', 'aes_cbc')  # Default to AES-CBC
+    enable_2fa = request.form.get('enable_2fa') == 'on'  # Check if 2FA checkbox is checked
 
     if not file or not enc_password or not pickup_password:
         return jsonify({"error": "Missing fields"}), 400
@@ -191,52 +272,63 @@ def handle_file_upload(request):
     if file.content_length and file.content_length > MAX_FILE_SIZE_BYTES:
         return jsonify({"error": f"File too large! Limit: {MAX_FILE_SIZE_BYTES / (1024**3):.2f} GB"}), 400
 
+    # Validate algorithm
+    if algorithm not in AVAILABLE_ALGORITHMS:
+        return jsonify({"error": "Invalid algorithm"}), 400
+        
+    algo_config = AVAILABLE_ALGORITHMS[algorithm]
+    if not algo_config["supports_file"]:
+        return jsonify({"error": "Algorithm does not support file operations"}), 400
+
     filename = secure_filename(file.filename)
     temp_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(temp_path)
 
-    with open(temp_path, 'rb') as f:
-        data = f.read()
+    try:
+        # Use the selected algorithm for encryption
+        module = algo_config["module"]
+        
+        random_id = secrets.token_urlsafe(24)
+        encrypted_filename = f"{random_id}.{algorithm}.encrypted"
+        encrypted_path = os.path.join(UPLOAD_FOLDER, encrypted_filename)
+        
+        # Encrypt file using the correct API (in_path, out_path, password)
+        module.encrypt_file(temp_path, encrypted_path, enc_password)
+        os.remove(temp_path)
 
-    salt = os.urandom(16)
-    key = derive_key(enc_password, salt)
-    nonce = os.urandom(12)
-    ct = AESGCM(key).encrypt(nonce, data, None)
+        meta = {
+            'pickup_password': base64.urlsafe_b64encode(hashlib.sha256(pickup_password.encode()).digest()).decode(),
+            'original_name': encrypt_filename(filename, enc_password),
+            'algorithm': algorithm,  # Store algorithm used for decryption
+            'timestamp': datetime.now().isoformat(),
+            'require_2fa': enable_2fa
+        }
+        
+        # Generate TOTP secret if 2FA is enabled
+        if enable_2fa:
+            totp_secret = pyotp.random_base32()
+            meta['totp_secret'] = totp_secret
+            meta['service_name'] = f"PacCrypt File: {filename[:20]}..."
+        with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.json"), 'w') as f:
+            json.dump(meta, f)
 
-    random_id = secrets.token_urlsafe(24)
+        pickup_url = request.host_url.rstrip('/') + url_for('pickup_file', file_id=random_id)
+        response_data = {"success": True, "pickup_url": pickup_url}
+        
+        # If 2FA is enabled, also return QR code URL for immediate setup
+        if enable_2fa:
+            qr_url = request.host_url.rstrip('/') + url_for('generate_qr_code', file_id=random_id)
+            response_data["qr_code_url"] = qr_url
+            response_data["totp_secret"] = totp_secret
+            response_data["service_name"] = f"PacCrypt File: {filename[:20]}..."
+            
+        return jsonify(response_data)
+    except Exception as e:
+        # Clean up temp file if it still exists
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        return jsonify({"error": f"Encryption failed: {str(e)}"}), 500
 
-    with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.enc"), 'wb') as f:
-        f.write(salt + nonce + ct)
-    os.remove(temp_path)
-
-    meta = {
-        'pickup_password': base64.urlsafe_b64encode(hashlib.sha256(pickup_password.encode()).digest()).decode(),
-        'original_name': encrypt_filename(filename, enc_password),
-        'timestamp': datetime.now().isoformat()
-    }
-    with open(os.path.join(UPLOAD_FOLDER, f"{random_id}.json"), 'w') as f:
-        json.dump(meta, f)
-
-    pickup_url = request.host_url.rstrip('/') + url_for('pickup_file', file_id=random_id)
-    return jsonify({"success": True, "pickup_url": pickup_url})
-
-def handle_text_operation(request):
-    data = request.get_json()
-    encryption_type = data.get("encryption-type", "basic")
-    operation = data.get("operation", "")
-    message = data.get("message", "")
-    password = data.get("password", "")
-
-    if encryption_type == "basic":
-        result = simple_encode(message) if operation == "encrypt" else simple_decode(message)
-        return jsonify(result=html.escape(result))
-
-    if operation == "encrypt":
-        encrypted = advanced_encrypt(message, password)
-        return jsonify(result=encrypted)
-    else:
-        decrypted = advanced_decrypt(message, password)
-        return jsonify(result=html.escape(decrypted))
 
 def encrypt_filename(filename: str, password: str) -> str:
     salt = os.urandom(16)
@@ -256,20 +348,44 @@ def decrypt_filename(enc_filename_b64: str, password: str) -> str:
 def pickup_file(file_id):
     """Handle file pickup and decryption."""
     meta_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.json")
-    enc_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.enc")
+    
+    # Find the encrypted file (could have different algorithm extensions)
+    enc_path = None
+    for filename in os.listdir(UPLOAD_FOLDER):
+        if filename.startswith(f"{file_id}.") and filename.endswith(".encrypted"):
+            enc_path = os.path.join(UPLOAD_FOLDER, filename)
+            break
+    
+    # Fallback to old .enc format for backward compatibility
+    if not enc_path:
+        old_enc_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.enc")
+        if os.path.exists(old_enc_path):
+            enc_path = old_enc_path
 
-    if not os.path.exists(meta_path) or not os.path.exists(enc_path):
+    if not os.path.exists(meta_path) or not enc_path or not os.path.exists(enc_path):
         flash("File not found or expired")
         return redirect(url_for('index'))
 
     if request.method == 'POST':
         return handle_file_pickup(request, meta_path, enc_path, file_id)
-    return render_template("pickup.html", file_id=file_id)
+    
+    # Check if 2FA is required for this file
+    require_2fa = False
+    service_name = None
+    if os.path.exists(meta_path):
+        with open(meta_path, 'r') as f:
+            meta = json.load(f)
+            require_2fa = meta.get('require_2fa', False)
+            if require_2fa:
+                service_name = meta.get('service_name', 'PacCrypt File')
+    
+    return render_template("pickup.html", file_id=file_id, require_2fa=require_2fa, service_name=service_name)
 
 def handle_file_pickup(request, meta_path, enc_path, file_id):
     """Process file pickup and decryption."""
     pickup_password = request.form.get('pickup_password')
     enc_password = request.form.get('enc_password')
+    totp_code = request.form.get('totp_code')
 
     if not pickup_password or not enc_password:
         flash("Missing fields")
@@ -283,17 +399,57 @@ def handle_file_pickup(request, meta_path, enc_path, file_id):
         flash("Incorrect pickup password")
         return redirect(request.url)
 
-    with open(enc_path, 'rb') as f:
-        enc_data = f.read()
-    salt, nonce, ct = enc_data[:16], enc_data[16:28], enc_data[28:]
-    key = derive_key(enc_password, salt)
+    # Check 2FA if required
+    if meta.get('require_2fa', False):
+        if not totp_code:
+            flash("2FA code is required")
+            return redirect(request.url)
+        
+        totp_secret = meta.get('totp_secret')
+        if not totp_secret:
+            flash("2FA configuration error")
+            return redirect(request.url)
+        
+        totp = pyotp.TOTP(totp_secret)
+        if not totp.verify(totp_code, valid_window=1):  # Allow 1 window tolerance for clock drift
+            flash("Invalid 2FA code")
+            return redirect(request.url)
 
+    # Check if this is an algorithm-based encryption or legacy AESGCM
+    algorithm = meta.get('algorithm')
+    
     try:
-        decrypted = AESGCM(key).decrypt(nonce, ct, None)
-    except Exception:
-        flash("Decryption failed")
+        if algorithm and algorithm in AVAILABLE_ALGORITHMS:
+            # Use the new algorithm-based decryption
+            algo_config = AVAILABLE_ALGORITHMS[algorithm]
+            module = algo_config["module"]
+            
+            # Create temporary file for decryption
+            temp_dec_path = os.path.join(UPLOAD_FOLDER, f"temp_decrypt_{secrets.token_urlsafe(8)}")
+            try:
+                # Decrypt file using the correct API (in_path, out_path, password)
+                module.decrypt_file(enc_path, temp_dec_path, enc_password)
+                
+                # Read decrypted data
+                with open(temp_dec_path, 'rb') as f:
+                    decrypted = f.read()
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_dec_path):
+                    os.remove(temp_dec_path)
+        else:
+            # Legacy AESGCM decryption for backward compatibility
+            with open(enc_path, 'rb') as f:
+                enc_data = f.read()
+            salt, nonce, ct = enc_data[:16], enc_data[16:28], enc_data[28:]
+            key = derive_key(enc_password, salt)
+            decrypted = AESGCM(key).decrypt(nonce, ct, None)
+            
+    except Exception as e:
+        flash(f"Decryption failed: {str(e)}")
         return redirect(request.url)
 
+    # Clean up files after successful decryption
     os.remove(meta_path)
     os.remove(enc_path)
     log_admin_event(f"File {file_id} downloaded and deleted.")
@@ -306,19 +462,94 @@ def handle_file_pickup(request, meta_path, enc_path, file_id):
     response = send_file(
         io.BytesIO(decrypted),
         as_attachment=True,
-
         download_name=original_name,
         mimetype='application/octet-stream'
     )
     
     # Add headers for better mobile compatibility
-    
     response.headers['Content-Disposition'] = f'attachment; filename="{original_name}"'
     response.headers['Content-Type'] = 'application/octet-stream'
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     
+    return response
+
+# ===== 2FA QR Code Routes =====
+@app.route("/admin-qr")
+def admin_qr_code():
+    """Generate QR code for admin 2FA setup."""
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+    
+    totp_secret = get_admin_totp_secret()
+    if not totp_secret:
+        return "2FA not enabled for admin", 400
+    
+    # Generate TOTP URI for QR code
+    totp_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(
+        name="admin",
+        issuer_name="PacCrypt Admin"
+    )
+    
+    # Generate QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(totp_uri)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to BytesIO
+    img_buffer = BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    
+    response = make_response(img_buffer.getvalue())
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Content-Disposition'] = 'inline; filename="admin_2fa_qr.png"'
+    return response
+
+@app.route("/qr/<file_id>")
+def generate_qr_code(file_id):
+    """Generate QR code for 2FA setup."""
+    meta_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.json")
+    
+    if not os.path.exists(meta_path):
+        return "File not found", 404
+    
+    with open(meta_path, 'r') as f:
+        meta = json.load(f)
+    
+    if not meta.get('require_2fa', False):
+        return "2FA not enabled for this file", 400
+    
+    totp_secret = meta.get('totp_secret')
+    service_name = meta.get('service_name', 'PacCrypt File')
+    
+    if not totp_secret:
+        return "TOTP secret not found", 400
+    
+    # Generate TOTP URI for QR code
+    totp_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(
+        name=file_id,
+        issuer_name=service_name
+    )
+    
+    # Generate QR code
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(totp_uri)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save to BytesIO
+    img_buffer = BytesIO()
+    img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    
+    response = make_response(img_buffer.getvalue())
+    response.headers['Content-Type'] = 'image/png'
+    response.headers['Content-Disposition'] = f'inline; filename="{file_id}_qr.png"'
     return response
 
 # ===== Admin Routes =====
@@ -396,9 +627,12 @@ def admin_setup():
     if request.method == "POST":
         u = request.form.get("username")
         p = request.form.get("password")
+        enable_2fa = request.form.get("enable_2fa") == "on"
         if u and p:
-            encrypt_creds(u, p)
+            totp_secret = pyotp.random_base32() if enable_2fa else None
+            encrypt_creds(u, p, totp_secret)
             session["admin_logged_in"] = True
+            session["admin_2fa_setup"] = enable_2fa
             return redirect(url_for("admin_page"))
         flash("Both fields required")
     return render_template("admin_setup.html")
@@ -409,14 +643,19 @@ def admin_login():
     if request.method == "POST":
         u = request.form.get("username")
         p = request.form.get("password")
-        if check_creds(u, p):
+        totp_code = request.form.get("totp_code")
+        
+        if check_creds(u, p, totp_code):
             session["admin_logged_in"] = True
             log_admin_event("Admin login successful.")
             return redirect(url_for("admin_page"))
         else:
             log_admin_event("Admin login failed.")
-            flash("Incorrect credentials")
-    return render_template("admin_login.html")
+            flash("Incorrect credentials or 2FA code")
+    
+    # Check if 2FA is enabled for the UI
+    requires_2fa = get_admin_2fa_status()
+    return render_template("admin_login.html", requires_2fa=requires_2fa)
 
 @app.route("/admin-logout")
 def admin_logout():
@@ -455,7 +694,10 @@ def admin_page():
         "debug_mode": app.debug
     }
 
-    return render_template("admin.html", routes=routes, server_info=server_info)
+    # Get 2FA status for UI
+    tfa_enabled = get_admin_2fa_status()
+
+    return render_template("admin.html", routes=routes, server_info=server_info, tfa_enabled=tfa_enabled)
 
 
 
@@ -555,6 +797,80 @@ def admin_change_password():
     except Exception as e:
         flash("Failed to update password")
         print("[ERROR] Password change failed:", e)
+        return redirect(url_for("admin_page"))
+
+@app.route("/admin-enable-2fa", methods=["POST"])
+def admin_enable_2fa():
+    """Enable 2FA for admin account."""
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    try:
+        key = load_admin_key()
+        cipher = Fernet(key)
+        with open(ADMIN_CRED_FILE, 'rb') as file:
+            decrypted = cipher.decrypt(file.read())
+        creds = json.loads(decrypted)
+
+        # Generate new TOTP secret
+        totp_secret = pyotp.random_base32()
+        creds["totp_secret"] = totp_secret
+        creds["2fa_enabled"] = True
+
+        encrypted = cipher.encrypt(json.dumps(creds).encode())
+        with open(ADMIN_CRED_FILE, 'wb') as file:
+            file.write(encrypted)
+
+        log_admin_event("Admin 2FA enabled.")
+        flash("2FA enabled successfully. Scan the QR code with your authenticator app.", "2fa-feedback")
+        return redirect(url_for("admin_page"))
+
+    except Exception as e:
+        flash("Failed to enable 2FA")
+        print("[ERROR] 2FA enable failed:", e)
+        return redirect(url_for("admin_page"))
+
+@app.route("/admin-disable-2fa", methods=["POST"])
+def admin_disable_2fa():
+    """Disable 2FA for admin account."""
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    totp_code = request.form.get("totp_code")
+    if not totp_code:
+        flash("2FA code required to disable 2FA")
+        return redirect(url_for("admin_page"))
+
+    try:
+        key = load_admin_key()
+        cipher = Fernet(key)
+        with open(ADMIN_CRED_FILE, 'rb') as file:
+            decrypted = cipher.decrypt(file.read())
+        creds = json.loads(decrypted)
+
+        # Verify 2FA code before disabling
+        if creds.get("2fa_enabled", False):
+            totp_secret = creds.get("totp_secret")
+            if totp_secret:
+                totp = pyotp.TOTP(totp_secret)
+                if not totp.verify(totp_code, valid_window=1):
+                    flash("Invalid 2FA code")
+                    return redirect(url_for("admin_page"))
+
+        creds["totp_secret"] = None
+        creds["2fa_enabled"] = False
+
+        encrypted = cipher.encrypt(json.dumps(creds).encode())
+        with open(ADMIN_CRED_FILE, 'wb') as file:
+            file.write(encrypted)
+
+        log_admin_event("Admin 2FA disabled.")
+        flash("2FA disabled successfully", "2fa-feedback")
+        return redirect(url_for("admin_page"))
+
+    except Exception as e:
+        flash("Failed to disable 2FA")
+        print("[ERROR] 2FA disable failed:", e)
         return redirect(url_for("admin_page"))
 
 @app.route("/admin-clear-uploads", methods=["POST"])
@@ -657,6 +973,48 @@ def admin_update_server():
         print(f"[ERROR] {error_msg}")
         return jsonify({"error": error_msg}), 500
 
+@app.route("/admin-switch-dev-mode", methods=["POST"])
+def admin_switch_dev_mode():
+    """Switch server to development mode."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), "application_data", "control_scripts", "restart_dev.py")
+        
+        if not os.path.exists(script_path):
+            return jsonify({"error": "Development restart script not found"}), 404
+        
+        # Execute the restart script
+        subprocess.Popen(["python", script_path])
+        
+        return jsonify({"message": "Switching to development mode... Server will restart momentarily."}), 200
+    except Exception as e:
+        error_msg = f"Failed to switch to dev mode: {str(e)}"
+        print(f"[ERROR] {error_msg}")
+        return jsonify({"error": error_msg}), 500
+
+@app.route("/admin-switch-prod-mode", methods=["POST"])
+def admin_switch_prod_mode():
+    """Switch server to production mode."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), "application_data", "control_scripts", "restart_prod.py")
+        
+        if not os.path.exists(script_path):
+            return jsonify({"error": "Production restart script not found"}), 404
+        
+        # Execute the restart script
+        subprocess.Popen(["python", script_path])
+        
+        return jsonify({"message": "Switching to production mode... Server will restart momentarily."}), 200
+    except Exception as e:
+        error_msg = f"Failed to switch to prod mode: {str(e)}"
+        print(f"[ERROR] {error_msg}")
+        return jsonify({"error": error_msg}), 500
+
 # ===== Sitemap and Robots =====
 @app.route("/sitemap", methods=["GET"])
 def sitemap():
@@ -689,6 +1047,43 @@ def robots_txt():
     return "\n".join(lines), 200, {"Content-Type": "text/plain"}
 
 # ===== API Endpoints =====
+@app.route("/api/algorithms", methods=["GET"])
+def api_algorithms():
+    """Get list of available encryption algorithms."""
+    algorithms = {}
+    for key, config in AVAILABLE_ALGORITHMS.items():
+        algorithms[key] = {
+            "name": config["name"],
+            "description": config["description"],
+            "supports_text": config["supports_text"],
+            "supports_file": config["supports_file"],
+            "requires_keypair": config.get("requires_keypair", False)
+        }
+    return jsonify(algorithms=algorithms)
+
+@app.route("/api/generate-keypair", methods=["POST"])
+def api_generate_keypair():
+    """Generate RSA key pair for hybrid algorithms."""
+    try:
+        data = request.get_json()
+        algorithm = data.get("algorithm", "rsa_hybrid")
+        
+        if algorithm not in AVAILABLE_ALGORITHMS:
+            return jsonify({"error": "Invalid algorithm"}), 400
+            
+        if not AVAILABLE_ALGORITHMS[algorithm].get("requires_keypair"):
+            return jsonify({"error": "Algorithm does not require key pairs"}), 400
+        
+        module = AVAILABLE_ALGORITHMS[algorithm]["module"]
+        private_key, public_key = module.generate_key_pair()
+        
+        return jsonify({
+            "private_key": private_key.decode() if isinstance(private_key, bytes) else private_key,
+            "public_key": public_key.decode() if isinstance(public_key, bytes) else public_key
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/encrypt", methods=["POST"])
 def api_encrypt():
     try:
@@ -697,38 +1092,71 @@ def api_encrypt():
             data = request.get_json()
             message = data.get("message", "")
             password = data.get("password", "")
-            if not message or not password:
-                return jsonify({"error": "Missing message or password"}), 400
+            algorithm = data.get("algorithm", "aes_gcm")
+            public_key = data.get("public_key", "")
+            
+            if not message:
+                return jsonify({"error": "Missing message"}), 400
+            
+            if algorithm not in AVAILABLE_ALGORITHMS:
+                return jsonify({"error": "Invalid algorithm"}), 400
+                
+            algo_config = AVAILABLE_ALGORITHMS[algorithm]
+            if not algo_config["supports_text"]:
+                return jsonify({"error": "Algorithm does not support text operations"}), 400
+            
+            module = algo_config["module"]
+            
+            if algo_config.get("requires_keypair"):
+                if not public_key:
+                    return jsonify({"error": "Public key required for this algorithm"}), 400
+                encrypted = module.encrypt_text(message, public_key, algorithm.replace("_hybrid", ""))
+            else:
+                if not password:
+                    return jsonify({"error": "Password required"}), 400
+                encrypted = module.encrypt_text(message, password)
 
-            salt = os.urandom(16)
-            nonce = os.urandom(12)
-            key = derive_key(password, salt)
-            ciphertext = AESGCM(key).encrypt(nonce, message.encode(), None)
-            encrypted_combined = salt + nonce + ciphertext
-            encrypted_b64 = base64.b64encode(encrypted_combined).decode()
-
-            return jsonify({"result": encrypted_b64})
+            return jsonify({"result": encrypted, "algorithm": algorithm})
 
         # File encryption
         if "file" in request.files and "enc_password" in request.form:
             uploaded_file = request.files["file"]
             password = request.form["enc_password"]
+            algorithm = request.form.get("algorithm", "aes_cbc")
+            
+            if algorithm not in AVAILABLE_ALGORITHMS:
+                return jsonify({"error": "Invalid algorithm"}), 400
+                
+            algo_config = AVAILABLE_ALGORITHMS[algorithm]
+            if not algo_config["supports_file"]:
+                return jsonify({"error": "Algorithm does not support file operations"}), 400
 
             file_data = uploaded_file.read()
-            salt = os.urandom(16)
-            nonce = os.urandom(12)
-            key = derive_key(password, salt)
-            ct = AESGCM(key).encrypt(nonce, file_data, None)
-            encrypted_binary = salt + nonce + ct
-
-            output_filename = f"{uploaded_file.filename}.encrypted"
-
-            return send_file(
-                BytesIO(encrypted_binary),
-                as_attachment=True,
-                download_name=output_filename,
-                mimetype="application/octet-stream"
-            )
+            temp_in = f"temp_in_{secrets.token_urlsafe(8)}"
+            temp_out = f"temp_out_{secrets.token_urlsafe(8)}"
+            
+            try:
+                with open(temp_in, 'wb') as f:
+                    f.write(file_data)
+                
+                module = algo_config["module"]
+                module.encrypt_file(temp_in, temp_out, password)
+                
+                with open(temp_out, 'rb') as f:
+                    encrypted_data = f.read()
+                
+                output_filename = f"{uploaded_file.filename}.{algorithm}.encrypted"
+                
+                return send_file(
+                    BytesIO(encrypted_data),
+                    as_attachment=True,
+                    download_name=output_filename,
+                    mimetype="application/octet-stream"
+                )
+            finally:
+                for temp_file in [temp_in, temp_out]:
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
 
         return jsonify({"error": "Missing or invalid input"}), 400
 
@@ -743,38 +1171,88 @@ def api_decrypt():
             data = request.get_json()
             encrypted_b64 = data.get("message", "")
             password = data.get("password", "")
-            if not encrypted_b64 or not password:
-                return jsonify({"error": "Missing message or password"}), 400
+            algorithm = data.get("algorithm", "aes_gcm")
+            private_key = data.get("private_key", "")
+            
+            if not encrypted_b64:
+                return jsonify({"error": "Missing encrypted message"}), 400
+            
+            if algorithm not in AVAILABLE_ALGORITHMS:
+                return jsonify({"error": "Invalid algorithm"}), 400
+                
+            algo_config = AVAILABLE_ALGORITHMS[algorithm]
+            if not algo_config["supports_text"]:
+                return jsonify({"error": "Algorithm does not support text operations"}), 400
+            
+            module = algo_config["module"]
+            
+            if algo_config.get("requires_keypair"):
+                if not private_key:
+                    return jsonify({"error": "Private key required for this algorithm"}), 400
+                plaintext = module.decrypt_text(encrypted_b64, private_key)
+            else:
+                if not password:
+                    return jsonify({"error": "Password required"}), 400
+                plaintext = module.decrypt_text(encrypted_b64, password)
 
-            raw = base64.b64decode(encrypted_b64)
-            salt, nonce, ct = raw[:16], raw[16:28], raw[28:]
-            key = derive_key(password, salt)
-            plaintext = AESGCM(key).decrypt(nonce, ct, None)
-
-            return jsonify({"result": plaintext.decode()})
+            return jsonify({"result": plaintext})
 
         # File decryption
         if "file" in request.files and "enc_password" in request.form:
             uploaded_file = request.files["file"]
             password = request.form["enc_password"]
+            
+            # Try to determine algorithm from filename
+            filename = uploaded_file.filename
+            algorithm = "aes_cbc"  # default
+            
+            for algo_name in AVAILABLE_ALGORITHMS.keys():
+                if f".{algo_name}.encrypted" in filename:
+                    algorithm = algo_name
+                    break
+            
+            # Allow override
+            algorithm = request.form.get("algorithm", algorithm)
+            
+            if algorithm not in AVAILABLE_ALGORITHMS:
+                return jsonify({"error": "Invalid algorithm"}), 400
+                
+            algo_config = AVAILABLE_ALGORITHMS[algorithm]
+            if not algo_config["supports_file"]:
+                return jsonify({"error": "Algorithm does not support file operations"}), 400
 
             encrypted_data = uploaded_file.read()
-            salt, nonce, ct = encrypted_data[:16], encrypted_data[16:28], encrypted_data[28:]
-            key = derive_key(password, salt)
-            decrypted = AESGCM(key).decrypt(nonce, ct, None)
-
-            filename = uploaded_file.filename
-            if filename.endswith(".encrypted"):
-                filename = filename[:-10]
-            else:
-                filename = f"decrypted_{filename}"
-
-            return send_file(
-                BytesIO(decrypted),
-                as_attachment=True,
-                download_name=filename,
-                mimetype="application/octet-stream"
-            )
+            temp_in = f"temp_in_{secrets.token_urlsafe(8)}"
+            temp_out = f"temp_out_{secrets.token_urlsafe(8)}"
+            
+            try:
+                with open(temp_in, 'wb') as f:
+                    f.write(encrypted_data)
+                
+                module = algo_config["module"]
+                module.decrypt_file(temp_in, temp_out, password)
+                
+                with open(temp_out, 'rb') as f:
+                    decrypted_data = f.read()
+                
+                # Clean up filename
+                if f".{algorithm}.encrypted" in filename:
+                    filename = filename.replace(f".{algorithm}.encrypted", "")
+                elif filename.endswith(".encrypted"):
+                    filename = filename[:-10]
+                else:
+                    filename = f"decrypted_{filename}"
+                
+                return send_file(
+                    BytesIO(decrypted_data),
+                    as_attachment=True,
+                    download_name=filename,
+                    mimetype="application/octet-stream"
+                )
+            finally:
+                for temp_file in [temp_in, temp_out]:
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
 
         return jsonify({"error": "Missing or invalid input"}), 400
 
@@ -786,42 +1264,74 @@ def api_pacshare():
     try:
         enc_password = request.form.get("enc_password")
         pickup_password = request.form.get("pickup_password")
+        algorithm = request.form.get("algorithm", "aes_cbc")  # Default to AES-CBC
+        enable_2fa = request.form.get("enable_2fa") == "on"  # Check if 2FA checkbox is checked
         file = request.files.get("file")
 
         if not file or not enc_password or not pickup_password:
             return jsonify({"error": "Missing file or fields"}), 400
 
-        file_data = file.read()
+        # Validate algorithm
+        if algorithm not in AVAILABLE_ALGORITHMS:
+            return jsonify({"error": "Invalid algorithm"}), 400
+            
+        algo_config = AVAILABLE_ALGORITHMS[algorithm]
+        if not algo_config["supports_file"]:
+            return jsonify({"error": "Algorithm does not support file operations"}), 400
+
         filename = secure_filename(file.filename)
+        temp_path = os.path.join(UPLOAD_FOLDER, f"temp_{secrets.token_urlsafe(8)}_{filename}")
+        file.save(temp_path)
 
-        salt = os.urandom(16)
-        key = derive_key(enc_password, salt)
-        nonce = os.urandom(12)
-        ct = AESGCM(key).encrypt(nonce, file_data, None)
-        encrypted = salt + nonce + ct
+        try:
+            # Use the selected algorithm for encryption
+            module = algo_config["module"]
+            
+            file_id = secrets.token_urlsafe(24)
+            encrypted_filename = f"{file_id}.{algorithm}.encrypted"
+            enc_path = os.path.join(UPLOAD_FOLDER, encrypted_filename)
+            meta_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.json")
+            
+            # Encrypt file using the correct API (in_path, out_path, password)
+            module.encrypt_file(temp_path, enc_path, enc_password)
 
-        file_id = secrets.token_urlsafe(24)
-        enc_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.enc")
-        meta_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.json")
+            encrypted_filename = encrypt_filename(filename, enc_password)
 
-        with open(enc_path, "wb") as f:
-            f.write(encrypted)
+            meta = {
+                'pickup_password': base64.urlsafe_b64encode(
+                    hashlib.sha256(pickup_password.encode()).digest()
+                ).decode(),
+                'original_name': encrypted_filename,
+                'algorithm': algorithm,  # Store algorithm used for decryption
+                'timestamp': datetime.now().isoformat(),
+                'require_2fa': enable_2fa
+            }
+            
+            # Generate TOTP secret if 2FA is enabled
+            if enable_2fa:
+                totp_secret = pyotp.random_base32()
+                meta['totp_secret'] = totp_secret
+                meta['service_name'] = f"PacCrypt File: {filename[:20]}..."
 
-        encrypted_filename = encrypt_filename(filename, enc_password)
+            with open(meta_path, "w") as f:
+                json.dump(meta, f)
 
-        meta = {
-            'pickup_password': base64.urlsafe_b64encode(
-                hashlib.sha256(pickup_password.encode()).digest()
-            ).decode(),
-            'original_name': encrypted_filename,
-            'timestamp': datetime.now().isoformat()
-        }
+            pickup_url = request.host_url.rstrip('/') + url_for('pickup_file', file_id=file_id)
+            response_data = {"pickup_url": pickup_url}
+            
+            # If 2FA is enabled, also return QR code URL for immediate setup
+            if enable_2fa:
+                qr_url = request.host_url.rstrip('/') + url_for('generate_qr_code', file_id=file_id)
+                response_data["qr_code_url"] = qr_url
+                response_data["totp_secret"] = totp_secret
+                response_data["service_name"] = f"PacCrypt File: {filename[:20]}..."
+                
+            return jsonify(response_data)
 
-        with open(meta_path, "w") as f:
-            json.dump(meta, f)
-
-        pickup_url = request.host_url.rstrip('/') + url_for('pickup_file', file_id=file_id)
-        return jsonify({"pickup_url": pickup_url})
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

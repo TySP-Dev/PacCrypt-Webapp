@@ -14,9 +14,9 @@ export function setupUI() {
     initializeEventListeners();
 }
 
-function initializeEventListeners() {
+async function initializeEventListeners() {
     const elements = {
-        encryptionType: document.getElementById("encryption-type"),
+        algorithm: document.getElementById("algorithm"),
         inputText: document.getElementById("input-text"),
         form: document.getElementById("crypto-form"),
         removeFileBtn: document.getElementById("remove-file-btn"),
@@ -26,22 +26,30 @@ function initializeEventListeners() {
         copyOutputBtn: document.getElementById("copy-output-btn"),
         toggleSwitch: document.getElementById("operation-toggle"),
         copyShareBtn: document.getElementById("copy-share-btn"),
-        shareLink: document.getElementById("share-link")
+        shareLink: document.getElementById("share-link"),
+        generateKeypairBtn: document.getElementById("generate-keypair-btn"),
+        loadPublicKeyBtn: document.getElementById("load-public-key-btn"),
+        loadPrivateKeyBtn: document.getElementById("load-private-key-btn"),
+        publicKeyFile: document.getElementById("public-key-file"),
+        privateKeyFile: document.getElementById("private-key-file")
     };
 
     if (validateElements(elements)) {
         setupElementListeners(elements);
     }
+    await loadAvailableAlgorithms();
+    // Initialize algorithm options on page load after algorithms are loaded
+    toggleAlgorithmOptions();
 }
 
 function validateElements(elements) {
-    return elements.encryptionType && elements.inputText && elements.form && 
+    return elements.algorithm && elements.inputText && elements.form && 
            elements.removeFileBtn && elements.clearAllBtn && elements.generateBtn && 
            elements.copyPasswordBtn && elements.toggleSwitch;
 }
 
 function setupElementListeners(elements) {
-    elements.encryptionType.addEventListener("change", toggleEncryptionOptions);
+    elements.algorithm?.addEventListener("change", toggleAlgorithmOptions);
     elements.inputText.addEventListener("input", handleInputChange);
     elements.form.addEventListener("submit", handleSubmit);
     elements.removeFileBtn.addEventListener("click", removeFile);
@@ -52,6 +60,13 @@ function setupElementListeners(elements) {
     elements.toggleSwitch.addEventListener("change", () => {
         console.log("Mode:", elements.toggleSwitch.checked ? "Decrypt" : "Encrypt");
     });
+
+    // Key pair management listeners
+    elements.generateKeypairBtn?.addEventListener("click", generateAndDownloadKeyPair);
+    elements.loadPublicKeyBtn?.addEventListener("click", () => elements.publicKeyFile?.click());
+    elements.loadPrivateKeyBtn?.addEventListener("click", () => elements.privateKeyFile?.click());
+    elements.publicKeyFile?.addEventListener("change", handlePublicKeyLoad);
+    elements.privateKeyFile?.addEventListener("change", handlePrivateKeyLoad);
 
     const fileInput = document.getElementById("file-input");
     if (fileInput) {
@@ -87,40 +102,10 @@ function setupShareLinkListeners(elements) {
     }
 }
 
-function toggleEncryptionOptions() {
-    const type = document.getElementById("encryption-type").value.trim().toLowerCase();
-    const passwordInputWrapper = document.getElementById("password-input");
-    const fileSection = document.querySelector("#encoding-section #file-section");
-    const isAdvanced = type.includes("advanced");
-
-    if (passwordInputWrapper) {
-        passwordInputWrapper.classList.toggle("hidden", !isAdvanced);
-    }
-
-    if (fileSection) {
-        fileSection.classList.toggle("hidden", !isAdvanced);
-    }
-
-    updateToggleLabels();
-    toggleInputMode();
-}
-
-function updateToggleLabels() {
-    const type = document.getElementById("encryption-type")?.value;
-    const leftLabel = document.getElementById("toggle-left-label");
-    const rightLabel = document.getElementById("toggle-right-label");
-
-    if (!type || !leftLabel || !rightLabel) return;
-
-    const isAdvanced = type.toLowerCase().includes("advanced");
-    leftLabel.textContent = isAdvanced ? "Encrypt" : "Encode";
-    rightLabel.textContent = isAdvanced ? "Decrypt" : "Decode";
-}
 
 function toggleInputMode() {
     const fileInput = document.getElementById("file-input");
     const textValue = document.getElementById("input-text")?.value.trim();
-    const isAdvanced = document.getElementById("encryption-type")?.value === "advanced";
 
     const textSection = document.getElementById("text-section");
     const fileSection = document.getElementById("file-section");
@@ -131,23 +116,39 @@ function toggleInputMode() {
     const fileSelected = fileInput.files.length > 0;
 
     textSection.style.display = fileSelected ? "none" : "flex";
-    fileSection.style.display = (isAdvanced && !textValue) ? "flex" : "none";
+    fileSection.style.display = !textValue ? "flex" : "none";
     removeBtn.style.display = fileSelected ? "inline-block" : "none";
 }
 
 async function handleSubmit(event) {
     event.preventDefault();
 
-    const encryptionType = document.getElementById("encryption-type")?.value;
+    const algorithm = document.getElementById("algorithm")?.value;
     const password = document.getElementById("password")?.value;
     const fileInput = document.getElementById("file-input");
     const isDecrypt = document.getElementById("operation-toggle").checked;
     const operation = isDecrypt ? "decrypt" : "encrypt";
 
-    if (!encryptionType || !fileInput) return;
+    if (!algorithm || !fileInput) return;
 
-    if (encryptionType === "advanced" && !password) {
-        return alert("Password is required for advanced encryption.");
+    // Check requirements based on algorithm
+    let requiresKeypair = false;
+    if (window.availableAlgorithms && window.availableAlgorithms[algorithm]) {
+        requiresKeypair = window.availableAlgorithms[algorithm].requires_keypair || false;
+    } else {
+        requiresKeypair = algorithm.includes("hybrid");
+    }
+    
+    if (requiresKeypair) {
+        const globalKeys = window.getGlobalKeys ? window.getGlobalKeys() : {};
+        if (operation === "encrypt" && !globalKeys.publicKey) {
+            return alert("Please load a public key in the Key Pairs Management section for encryption with this algorithm.");
+        }
+        if (operation === "decrypt" && !globalKeys.privateKey) {
+            return alert("Please load a private key in the Key Pairs Management section for decryption with this algorithm.");
+        }
+    } else if (!password) {
+        return alert("Password is required for this algorithm.");
     }
 
     if (fileInput.files.length > 0) {
@@ -156,19 +157,39 @@ async function handleSubmit(event) {
             : decryptFile(fileInput, password);
     }
 
-    await handleTextOperation(encryptionType, operation, password);
+    await handleTextOperation(operation, password);
 }
 
-async function handleTextOperation(encryptionType, operation, password) {
+async function handleTextOperation(operation, password) {
+    const algorithm = document.getElementById("algorithm")?.value || "aes_gcm";
+    
     const payload = {
-        "encryption-type": encryptionType,
-        operation: operation,
         message: document.getElementById("input-text")?.value,
-        password: password
+        algorithm: algorithm
     };
 
+    // Add appropriate authentication based on algorithm
+    let requiresKeypair = false;
+    if (window.availableAlgorithms && window.availableAlgorithms[algorithm]) {
+        requiresKeypair = window.availableAlgorithms[algorithm].requires_keypair || false;
+    } else {
+        requiresKeypair = algorithm.includes("hybrid");
+    }
+    
+    if (requiresKeypair) {
+        const globalKeys = window.getGlobalKeys ? window.getGlobalKeys() : {};
+        if (operation === "encrypt" && globalKeys.publicKey) {
+            payload.public_key = globalKeys.publicKey;
+        } else if (operation === "decrypt" && globalKeys.privateKey) {
+            payload.private_key = globalKeys.privateKey;
+        }
+    } else {
+        payload.password = password;
+    }
+
     try {
-        const response = await fetch("/", {
+        const endpoint = operation === "encrypt" ? "/api/encrypt" : "/api/decrypt";
+        const response = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -178,7 +199,11 @@ async function handleTextOperation(encryptionType, operation, password) {
 
         const outputField = document.getElementById("output-text");
         if (outputField) {
-            outputField.value = data.result || "[Error] No response received.";
+            if (data.error) {
+                outputField.value = `[Error] ${data.error}`;
+            } else {
+                outputField.value = data.result || "[Error] No response received.";
+            }
         }
     } catch (err) {
         alert("Error processing request: " + err.message);
@@ -326,6 +351,230 @@ function showCopyFeedback(feedbackEl) {
             feedbackEl.style.display = "none";
         }, 300);
     }, 3000);
+}
+
+// ===== Algorithm Management =====
+async function loadAvailableAlgorithms() {
+    try {
+        const response = await fetch('/api/algorithms');
+        const data = await response.json();
+        
+        if (response.ok && data.algorithms) {
+            // Store algorithms globally for use in other functions
+            window.availableAlgorithms = data.algorithms;
+            updateAlgorithmDropdown(data.algorithms);
+        }
+    } catch (error) {
+        console.error('Failed to load algorithms:', error);
+    }
+}
+
+function updateAlgorithmDropdown(algorithms) {
+    const algorithmSelect = document.getElementById('algorithm');
+    const shareAlgorithmSelect = document.getElementById('share-algorithm');
+    
+    // Update main encryption/decryption algorithm dropdown
+    if (algorithmSelect) {
+        algorithmSelect.innerHTML = '';
+        
+        let firstOption = null;
+        for (const [key, algo] of Object.entries(algorithms)) {
+            if (algo.supports_text) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${algo.name}${algo.requires_keypair ? ' (requires keypair)' : ''}`;
+                algorithmSelect.appendChild(option);
+                
+                // Remember the first option (should be a non-keypair algorithm)
+                if (!firstOption) {
+                    firstOption = key;
+                }
+            }
+        }
+        
+        // Ensure the first option is selected
+        if (firstOption) {
+            algorithmSelect.value = firstOption;
+        }
+    }
+    
+    // Update PacShare algorithm dropdown (for file uploads)
+    if (shareAlgorithmSelect) {
+        shareAlgorithmSelect.innerHTML = '';
+        
+        let firstFileOption = null;
+        for (const [key, algo] of Object.entries(algorithms)) {
+            if (algo.supports_file) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${algo.name}${algo.requires_keypair ? ' (requires keypair)' : ''}`;
+                shareAlgorithmSelect.appendChild(option);
+                
+                // Remember the first file-supporting option
+                if (!firstFileOption) {
+                    firstFileOption = key;
+                }
+            }
+        }
+        
+        // Set the first file-supporting option as selected
+        if (firstFileOption) {
+            shareAlgorithmSelect.value = firstFileOption;
+        }
+    }
+    
+    // Update Key Pairs Management dropdown
+    const keypairAlgorithmSelect = document.getElementById('keypair-algorithm');
+    if (keypairAlgorithmSelect) {
+        // Clear existing options except the hardcoded ones
+        const options = keypairAlgorithmSelect.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value !== 'rsa_hybrid' && option.value !== 'pqcrypto') {
+                option.remove();
+            }
+        });
+        
+        // Show/hide post-quantum option based on availability
+        const pqOption = document.getElementById('pqcrypto-option');
+        if (pqOption) {
+            pqOption.style.display = algorithms.pqcrypto ? 'block' : 'none';
+        }
+        
+        // If rsa_hybrid is not available, hide it
+        const rsaOption = keypairAlgorithmSelect.querySelector('option[value="rsa_hybrid"]');
+        if (rsaOption) {
+            rsaOption.style.display = algorithms.rsa_hybrid ? 'block' : 'none';
+        }
+    }
+    
+    // Call toggleAlgorithmOptions after dropdown is populated
+    toggleAlgorithmOptions();
+}
+
+function toggleAlgorithmOptions() {
+    const algorithm = document.getElementById("algorithm")?.value;
+    const keypairSection = document.getElementById("keypair-section");
+    const passwordInput = document.getElementById("password-input");
+    
+    if (!algorithm) return;
+    
+    // Check if algorithm requires keypair by looking at available algorithms data
+    let requiresKeypair = false;
+    if (window.availableAlgorithms && window.availableAlgorithms[algorithm]) {
+        requiresKeypair = window.availableAlgorithms[algorithm].requires_keypair || false;
+    } else {
+        // Fallback to checking name for "hybrid"
+        requiresKeypair = algorithm.includes("hybrid");
+    }
+    
+    // Show/hide keypair section only for algorithms that require it
+    if (keypairSection) {
+        keypairSection.style.display = requiresKeypair ? "block" : "none";
+    }
+    
+    // Show/hide password input (opposite of keypair section)
+    if (passwordInput) {
+        passwordInput.style.display = requiresKeypair ? "none" : "block";
+    }
+    
+    // Update key status based on global keys
+    const globalKeys = window.getGlobalKeys ? window.getGlobalKeys() : {};
+    const publicStatus = document.getElementById("public-key-status");
+    const privateStatus = document.getElementById("private-key-status");
+    
+    if (!requiresKeypair) {
+        if (publicStatus) publicStatus.style.display = "none";
+        if (privateStatus) privateStatus.style.display = "none";
+    } else {
+        // Show key status if keys are loaded in global store
+        if (publicStatus) publicStatus.style.display = globalKeys.publicKey ? "block" : "none";
+        if (privateStatus) privateStatus.style.display = globalKeys.privateKey ? "block" : "none";
+    }
+}
+
+// ===== File-based Key Management =====
+async function generateAndDownloadKeyPair() {
+    const algorithm = document.getElementById("algorithm")?.value;
+    
+    let requiresKeypair = false;
+    if (window.availableAlgorithms && window.availableAlgorithms[algorithm]) {
+        requiresKeypair = window.availableAlgorithms[algorithm].requires_keypair || false;
+    } else {
+        requiresKeypair = algorithm.includes("hybrid");
+    }
+    
+    if (!algorithm || !requiresKeypair) {
+        alert("Key pair generation is only available for algorithms that require key pairs");
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/generate-keypair', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ algorithm: algorithm })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Download public key
+            downloadTextAsFile(data.public_key, `${algorithm}_public_key.pub`, 'text/plain');
+            
+            // Download private key  
+            downloadTextAsFile(data.private_key, `${algorithm}_private_key.key`, 'text/plain');
+            
+            alert("✅ Key pair generated and downloaded!\n\n📁 Files saved:\n• Public Key: " + `${algorithm}_public_key.pub` + "\n• Private Key: " + `${algorithm}_private_key.key` + "\n\n🔐 Use public key for encryption, private key for decryption.");
+        } else {
+            alert(`Error generating key pair: ${data.error}`);
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+
+function downloadTextAsFile(text, filename, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function handlePublicKeyLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Update global keys instead of window variables
+        if (window.setGlobalKeys) {
+            window.setGlobalKeys({ publicKey: e.target.result });
+        }
+        document.getElementById("public-key-status").style.display = "block";
+        console.log("Public key loaded successfully and synced to global store");
+    };
+    reader.readAsText(file);
+}
+
+function handlePrivateKeyLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Update global keys instead of window variables
+        if (window.setGlobalKeys) {
+            window.setGlobalKeys({ privateKey: e.target.result });
+        }
+        document.getElementById("private-key-status").style.display = "block";
+        console.log("Private key loaded successfully and synced to global store");
+    };
+    reader.readAsText(file);
 }
 
 function startPacman() { }

@@ -57,6 +57,8 @@
                 <form action="{{ url_for('admin_settings') }}" method="GET" style="display: inline;">
                     <button type="submit">Settings</button>
                 </form>
+                <button onclick="switchToDevMode()" style="background: #0066cc;">Switch to Dev Mode</button>
+                <button onclick="switchToProdMode()" style="background: #cc6600;">Switch to Prod Mode</button>
                 <button onclick="resetAdmin()" class="danger-button">Reset Admin</button>
                 <button onclick="clearUploads()" class="danger-button">Clear PacShare</button>
             </div>
@@ -83,6 +85,58 @@
                 <input type="password" name="new_password" placeholder="New Password" required />
                 <button type="submit">Update Password</button>
             </form>
+        </section>
+
+        <!-- 2FA Management Section -->
+        <section id="2fa-section" class="card form-group">
+            <h2>Two-Factor Authentication (2FA)</h2>
+
+            <!-- 2FA Feedback -->
+            {% with messages = get_flashed_messages(with_categories=true, category_filter=['2fa-feedback']) %}
+            {% for category, message in messages %}
+            <div class="copy-feedback show">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            {% if tfa_enabled %}
+                <!-- 2FA is enabled -->
+                <div class="status-info">
+                    <p style="color: lime;">✅ 2FA is <strong>enabled</strong> for your admin account.</p>
+                    <p>Your account is protected with TOTP-based two-factor authentication.</p>
+                </div>
+
+                <!-- QR Code Display -->
+                <div class="form-group">
+                    <button type="button" onclick="toggleQRCode()" style="margin-bottom: 10px;">Show/Hide QR Code</button>
+                    <div id="qr-code-container" style="display: none; text-align: center;">
+                        <p><strong>Scan this QR code with your authenticator app:</strong></p>
+                        <img src="{{ url_for('admin_qr_code') }}" alt="Admin 2FA QR Code" style="max-width: 200px;" />
+                        <p style="font-size: 0.85em; color: #ccc;">You can re-scan this QR code if you need to set up 2FA on a new device.</p>
+                    </div>
+                </div>
+
+                <!-- Disable 2FA Form -->
+                <div class="form-group">
+                    <form method="POST" action="{{ url_for('admin_disable_2fa') }}">
+                        <input type="text" name="totp_code" placeholder="Enter current 2FA code to disable" pattern="[0-9]{6}" maxlength="6" required />
+                        <button type="submit" class="danger-button">Disable 2FA</button>
+                    </form>
+                </div>
+
+            {% else %}
+                <!-- 2FA is disabled -->
+                <div class="status-info">
+                    <p style="color: #ff6b6b;">🔒 2FA is <strong>disabled</strong> for your admin account.</p>
+                    <p>Enable 2FA for enhanced security using authenticator apps like Google Authenticator, Authy, or Microsoft Authenticator.</p>
+                </div>
+
+                <!-- Enable 2FA -->
+                <div class="form-group">
+                    <form method="POST" action="{{ url_for('admin_enable_2fa') }}">
+                        <button type="submit">Enable 2FA</button>
+                    </form>
+                </div>
+            {% endif %}
         </section>
 
         <!-- Server Status Section -->
@@ -239,6 +293,58 @@
         }
     }
 
+    async function switchToDevMode() {
+        if (!confirm('Are you sure you want to switch to Development mode? This will restart the server.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_switch_dev_mode") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                showFeedback(data.error || 'Failed to switch to dev mode.');
+            }
+        } catch (error) {
+            showFeedback('Failed to switch to dev mode.');
+        }
+    }
+
+    async function switchToProdMode() {
+        if (!confirm('Are you sure you want to switch to Production mode? This will restart the server.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_switch_prod_mode") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                showFeedback(data.error || 'Failed to switch to prod mode.');
+            }
+        } catch (error) {
+            showFeedback('Failed to switch to prod mode.');
+        }
+    }
+
     function showFeedback(message) {
         const feedback = document.getElementById('admin-feedback');
         feedback.textContent = message;
@@ -251,6 +357,19 @@
                 feedback.style.display = 'none';
             }, 300);
         }, 3000);
+    }
+
+    function toggleQRCode() {
+        const container = document.getElementById('qr-code-container');
+        const button = document.querySelector('button[onclick="toggleQRCode()"]');
+        
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            button.textContent = 'Hide QR Code';
+        } else {
+            container.style.display = 'none';
+            button.textContent = 'Show QR Code';
+        }
     }
     </script>
 </body>
