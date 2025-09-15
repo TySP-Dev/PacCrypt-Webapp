@@ -75,7 +75,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/TySP-Dev/PacCrypt-Webapp.git
+git clone -b "dev-only_DO-NOT-USE" https://github.com/TySP-Dev/PacCrypt-Webapp.git
 cd PacCrypt-Webapp
 
 # Create virtual environment
@@ -403,5 +403,6 @@ We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned fe
 MIT © [TySP-Dev](https://github.com/TySP-Dev)
 
 **🔐 Secure by design. Simple by choice. Powerful by nature.**
+
 
 
