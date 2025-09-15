@@ -15,6 +15,9 @@
     
     <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/bulk-operations.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/crypto-settings.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/pacshare-enhanced.js') }}" defer></script>
 </head>
 <body class="dark">
     <!-- Header -->
@@ -32,16 +35,342 @@
     <main>
         <!-- Password Generator Section -->
         <section id="password-generator-section" class="card form-group">
-            <h2>Password Generator</h2>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Password Generator</h2>
+                <button type="button" id="password-settings-btn" class="settings-button" title="Password Settings">
+                    ⚙️
+                </button>
+            </div>
+
+            <!-- Generated Password Display -->
             <div class="form-group">
-                <input type="text" id="generated-password" readonly />
-                <div class="button-group">
-                    <button type="button" id="generate-btn">Generate</button>
+                <label for="generated-password">Generated Password:</label>
+                <div style="position: relative;">
+                    <input type="text" id="generated-password" readonly style="font-family: monospace;" />
+                    <button type="button" id="toggle-password-visibility" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #00ff99; cursor: pointer;">👁️</button>
+                </div>
+
+                <!-- Password Strength Meter -->
+                <div id="password-strength-container" style="margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label style="margin: 0;">Password Strength:</label>
+                        <span id="password-strength-text" style="font-weight: bold; color: #ff6b6b;">No Password</span>
+                    </div>
+                    <div id="password-strength-bar" style="width: 100%; height: 10px; background-color: #333; border-radius: 5px; overflow: hidden;">
+                        <div id="password-strength-fill" style="height: 100%; width: 0%; background-color: #ff6b6b; transition: all 0.3s ease;"></div>
+                    </div>
+                    <div id="password-strength-details" style="margin-top: 8px; font-size: 0.9em; color: #ccc;">
+                        <div id="strength-score" style="margin-bottom: 3px;">Score: 0/100</div>
+                        <div id="strength-feedback"></div>
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 15px;">
+                    <button type="button" id="generate-btn">Generate Password</button>
                     <button type="button" id="copy-btn">Copy Password</button>
+                    <button type="button" id="use-password-btn">Use in Form</button>
                 </div>
                 <div id="password-copy-feedback" class="copy-feedback">Password copied to clipboard!</div>
             </div>
         </section>
+
+        <!-- Password Settings Modal -->
+        <div id="password-settings-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Password Generator Settings</h3>
+                    <button type="button" id="close-password-settings" class="close-button">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Password Length -->
+                    <div class="setting-group">
+                        <div class="length-header">
+                            <label for="password-length">Length:</label>
+                            <div class="length-input-container">
+                                <input type="number" id="password-length-input" min="8" max="128" value="16" class="length-number-input" />
+                                <span class="length-unit">characters</span>
+                            </div>
+                        </div>
+                        <input type="range" id="password-length" min="8" max="128" value="16" class="length-slider" />
+                        <div class="length-labels">
+                            <span>8</span>
+                            <span>32</span>
+                            <span>64</span>
+                            <span>128</span>
+                        </div>
+                    </div>
+
+                    <!-- Character Set Options -->
+                    <div class="setting-group">
+                        <h4>Character Types</h4>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="include-uppercase" checked />
+                                <span class="checkmark"></span>
+                                Uppercase (A-Z)
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="include-lowercase" checked />
+                                <span class="checkmark"></span>
+                                Lowercase (a-z)
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="include-numbers" checked />
+                                <span class="checkmark"></span>
+                                Numbers (0-9)
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="include-special" checked />
+                                <span class="checkmark"></span>
+                                Special Characters
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="setting-group">
+                        <h4>Advanced Options</h4>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="exclude-ambiguous" />
+                            <span class="checkmark"></span>
+                            Exclude ambiguous characters (0, O, l, 1, I)
+                        </label>
+                    </div>
+
+                    <!-- Custom Characters -->
+                    <div class="setting-group">
+                        <label for="custom-characters">Custom Characters</label>
+                        <input type="text" id="custom-characters" placeholder="Add custom characters..." class="custom-input" />
+                        <div class="setting-hint">Add any additional characters you want to include</div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="setting-group">
+                        <h4>Character Set Preview</h4>
+                        <div id="charset-preview" class="charset-preview">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="reset-password-settings" class="secondary-button">Reset to Defaults</button>
+                    <button type="button" id="apply-password-settings" class="primary-button">Apply Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crypto Settings Modal -->
+        <div id="crypto-settings-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Encryption Settings</h3>
+                    <button type="button" id="close-crypto-settings" class="close-button">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Processing Mode -->
+                    <div class="setting-group">
+                        <h4>Processing Mode</h4>
+                        <div class="mode-selection">
+                            <label class="radio-item">
+                                <input type="radio" name="processing-mode" id="single-file-mode-radio" value="single" checked />
+                                <span class="radiomark"></span>
+                                <div class="radio-content">
+                                    <div class="radio-title">Single File</div>
+                                    <div class="radio-description">Process one file at a time</div>
+                                </div>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="processing-mode" id="bulk-file-mode-radio" value="bulk" />
+                                <span class="radiomark"></span>
+                                <div class="radio-content">
+                                    <div class="radio-title">Bulk Processing</div>
+                                    <div class="radio-description">Process multiple files with drag & drop</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- File Preview Options -->
+                    <div class="setting-group">
+                        <h4>File Preview</h4>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="enable-file-preview" checked />
+                            <span class="checkmark"></span>
+                            Enable file preview before processing
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="auto-download-results" checked />
+                            <span class="checkmark"></span>
+                            Automatically download processed files
+                        </label>
+                    </div>
+
+                    <!-- Bulk Processing Options -->
+                    <div class="setting-group" id="bulk-options" style="display: none;">
+                        <h4>Bulk Processing Options</h4>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="sequential-processing" checked />
+                            <span class="checkmark"></span>
+                            Process files sequentially (prevents server overload)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="show-detailed-progress" checked />
+                            <span class="checkmark"></span>
+                            Show detailed progress for each file
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="stop-on-error" />
+                            <span class="checkmark"></span>
+                            Stop processing if any file fails
+                        </label>
+                    </div>
+
+                    <!-- Performance Settings -->
+                    <div class="setting-group">
+                        <h4>Performance</h4>
+                        <div class="setting-item">
+                            <label for="max-file-size">Maximum file size (MB):</label>
+                            <div class="size-input-container">
+                                <input type="number" id="max-file-size-input" min="1" max="1000" value="100" class="size-number-input" />
+                                <span class="size-unit">MB</span>
+                            </div>
+                        </div>
+                        <div class="setting-hint">Files larger than this will show a warning</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="reset-crypto-settings" class="secondary-button">Reset to Defaults</button>
+                    <button type="button" id="apply-crypto-settings" class="primary-button">Apply Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PacShare Settings Modal -->
+        <div id="pacshare-settings-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>PacShare Settings</h3>
+                    <button type="button" id="close-pacshare-settings" class="close-button">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Security Options -->
+                    <div class="setting-group">
+                        <h4>Security</h4>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="enable-2fa-setting" />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Enable 2FA (TOTP)</div>
+                                <div class="checkbox-description">Adds extra security with Google Authenticator, Authy, etc.</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="auto-clear-passwords" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Auto-clear passwords after upload</div>
+                                <div class="checkbox-description">Automatically clear password fields for security</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Upload Behavior -->
+                    <div class="setting-group">
+                        <h4>Upload Behavior</h4>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="auto-copy-links" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Auto-copy share links</div>
+                                <div class="checkbox-description">Automatically copy links to clipboard after upload</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="show-upload-progress" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Show detailed upload progress</div>
+                                <div class="checkbox-description">Display progress bars for each file</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="scroll-to-results" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Auto-scroll to results</div>
+                                <div class="checkbox-description">Automatically scroll to results after upload</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- File Validation -->
+                    <div class="setting-group">
+                        <h4>File Validation</h4>
+                        <div class="setting-item">
+                            <label for="max-upload-size">Maximum file size per upload (MB):</label>
+                            <div class="size-input-container">
+                                <input type="number" id="max-upload-size-input" min="1" max="1000" value="25" class="size-number-input" />
+                                <span class="size-unit">MB</span>
+                            </div>
+                            <div class="setting-hint">Files larger than this will show a warning</div>
+                        </div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="validate-file-types" />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Validate file types</div>
+                                <div class="checkbox-description">Show warnings for potentially unsafe file types</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="setting-group">
+                        <h4>Advanced</h4>
+                        <div class="setting-item">
+                            <label for="concurrent-uploads">Maximum concurrent uploads:</label>
+                            <div class="size-input-container">
+                                <input type="number" id="concurrent-uploads-input" min="1" max="10" value="1" class="size-number-input" />
+                                <span class="size-unit">files</span>
+                            </div>
+                            <div class="setting-hint">1 = sequential uploads (recommended), higher = parallel uploads</div>
+                        </div>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="enable-file-preview" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Enable file preview</div>
+                                <div class="checkbox-description">Allow previewing files before upload</div>
+                            </div>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="remember-algorithm" checked />
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Remember encryption algorithm</div>
+                                <div class="checkbox-description">Remember the last selected algorithm</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Current Settings Summary -->
+                    <div class="setting-group">
+                        <h4>Current Configuration</h4>
+                        <div id="pacshare-settings-summary" class="charset-preview">
+                            Loading current settings...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="reset-pacshare-settings" class="secondary-button">Reset to Defaults</button>
+                    <button type="button" id="apply-pacshare-settings" class="primary-button">Apply Settings</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Key Management Section -->
         <section id="key-pairs-section" class="card form-group">
@@ -106,7 +435,12 @@
 
         <!-- Encryption/Decryption Section -->
         <section id="encoding-section" class="card form-group">
-            <h2>Encrypt & Decrypt</h2>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Encrypt & Decrypt</h2>
+                <button type="button" id="crypto-settings-btn" class="settings-button" title="Encryption Settings">
+                    ⚙️
+                </button>
+            </div>
             <form id="crypto-form" class="form-group">
                 <!-- Algorithm Selection -->
                 <div class="form-group" id="algorithm-selection">
@@ -159,8 +493,55 @@
 
                 <!-- File Input Section -->
                 <div id="file-section" class="form-group">
-                    <input type="file" id="file-input" />
-                    <button type="button" id="remove-file-btn">Remove File</button>
+                    <!-- Single File Input (default) -->
+                    <div id="single-file-mode">
+                        <input type="file" id="file-input" />
+                        <button type="button" id="remove-file-btn">Remove File</button>
+                    </div>
+
+                    <!-- Bulk File Mode (hidden by default) -->
+                    <div id="bulk-file-mode" style="display: none;">
+                        <!-- Drag & Drop Zone -->
+                        <div id="bulk-drop-zone" class="drop-zone">
+                            <div class="drop-zone-content">
+                                <div class="drop-zone-icon">📁</div>
+                                <p>Drag & drop files here or <button type="button" id="bulk-file-select">select files</button></p>
+                                <p style="font-size: 0.9em; color: #888;">Supports multiple files</p>
+                            </div>
+                            <input type="file" id="bulk-file-input" multiple style="display: none;" />
+                        </div>
+
+                        <!-- File Preview Section -->
+                        <div id="bulk-file-preview" style="display: none; margin-top: 15px;">
+                            <h3>Selected Files</h3>
+                            <div id="bulk-file-list" class="file-list"></div>
+                            <div class="button-group" style="margin-top: 15px;">
+                                <button type="button" id="bulk-clear-btn" class="danger-button">Clear All</button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Section -->
+                        <div id="bulk-progress-section" style="display: none; margin-top: 15px;">
+                            <h3>Processing Progress</h3>
+                            <div id="bulk-overall-progress" class="progress-container">
+                                <div class="progress-bar">
+                                    <div id="bulk-overall-bar" class="progress-fill"></div>
+                                </div>
+                                <span id="bulk-overall-text">0 / 0 files processed</span>
+                            </div>
+                            <div id="bulk-file-progress-list" class="file-progress-list"></div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div id="bulk-results-section" style="display: none; margin-top: 15px;">
+                            <h3>Results</h3>
+                            <div id="bulk-results-list" class="results-list"></div>
+                            <div class="button-group" style="margin-top: 15px;">
+                                <button type="button" id="bulk-download-all">Download All Results</button>
+                                <button type="button" id="bulk-reset">Start Over</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->
@@ -180,8 +561,15 @@
 
         <!-- File Sharing Section -->
         <section id="sharing-section" class="card form-group">
-            <h2 style="margin-bottom: unset;">PacShare</h2>
-            <p style="margin-top: unset;">Securely share encrypted files.</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0;">PacShare</h2>
+                    <p style="margin: 5px 0 0 0;">Securely share encrypted files.</p>
+                </div>
+                <button type="button" id="pacshare-settings-btn" class="settings-button" title="PacShare Settings">
+                    ⚙️
+                </button>
+            </div>
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages() %}
@@ -206,6 +594,63 @@
 
 
             <!-- File Upload Form -->
+            <form method="POST" enctype="multipart/form-data" class="form-group" id="upload-form">
+                <!-- Algorithm Selection for PacShare -->
+                <div class="form-group">
+                    <label for="share-algorithm">Encryption Algorithm:</label>
+                    <select id="share-algorithm" name="algorithm">
+                        <!-- Options populated dynamically by JavaScript -->
+                    </select>
+                </div>
+
+                <!-- Enhanced File Upload Section -->
+                <div class="form-group">
+                    <!-- Drag & Drop Zone for PacShare -->
+                    <div id="pacshare-drop-zone" class="drop-zone">
+                        <div class="drop-zone-content">
+                            <div class="drop-zone-icon">📤</div>
+                            <p>Drag & drop files here or <button type="button" id="pacshare-file-select">select files</button></p>
+                            <p style="font-size: 0.9em; color: #888;">Single file or multiple files supported</p>
+                        </div>
+                        <input type="file" name="file" id="upload-file" multiple style="display: none;" />
+                    </div>
+
+                    <!-- Selected Files Display -->
+                    <div id="pacshare-file-list" style="display: none; margin-top: 15px;">
+                        <h4 style="color: #00ff99; margin-bottom: 10px;">Selected Files</h4>
+                        <div id="pacshare-files-container" class="file-list"></div>
+                        <div class="button-group" style="margin-top: 10px;">
+                            <button type="button" id="pacshare-clear-files" class="danger-button">Clear All</button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="password" name="enc_password" placeholder="Encryption/Decryption Password" required />
+                <input type="password" name="pickup_password" placeholder="Pickup Password" required />
+
+                <div class="button-group">
+                    <button type="submit" id="pacshare-upload-btn">Upload and Generate Links</button>
+                </div>
+            </form>
+
+            <!-- Results Section -->
+            <div id="pacshare-results" style="display: none; margin-top: 20px;">
+                <h3 style="color: #00ff99;">Upload Results</h3>
+                <div id="pacshare-results-list" class="results-list"></div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="pacshare-progress" style="display: none; margin-top: 20px;">
+                <h3>Upload Progress</h3>
+                <div id="pacshare-overall-progress" class="progress-container">
+                    <div class="progress-bar">
+                        <div id="pacshare-overall-bar" class="progress-fill"></div>
+                    </div>
+                    <span id="pacshare-overall-text">0 / 0 files uploaded</span>
+                </div>
+                <div id="pacshare-file-progress" class="file-progress-list"></div>
+            </div>
+
             <!-- Share Link Container (initially hidden) -->
             <div class="share-link-container" id="share-link-container" style="display: none;">
                 <a id="share-link" href="#" target="_blank"></a>
@@ -220,7 +665,7 @@
                 <div style="text-align: center; margin: 15px 0;">
                     <img id="tfa-qr-image" src="" alt="2FA QR Code" style="max-width: 200px; border: 2px solid #00ff99;" />
                 </div>
-                
+
                 <!-- 2FA String Container -->
                 <div style="margin-top: 15px; padding: 10px; border: 1px solid #00ff99; border-radius: 5px; background-color: #001100;">
                     <p style="color: #00ff99; margin: 5px 0; font-size: 0.9em;"><strong>Or manually enter this string:</strong></p>
@@ -230,135 +675,14 @@
                         <div id="tfa-string-feedback" class="copy-feedback">2FA string copied to clipboard!</div>
                     </div>
                 </div>
-                
+
                 <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">⚠️ SAVE THIS QR CODE OR STRING NOW! It will not be shown again for security reasons.</p>
                 <p style="color: #ccc; font-size: 0.9em;">Recommended apps: Google Authenticator, Authy, Microsoft Authenticator</p>
-                <button type="button" onclick="closeTwoFactorSetup()">I've Saved the 2FA Information</button>
+                <button type="button" onclick="pacShareEnhanced && pacShareEnhanced.closeTwoFactorSetup ? pacShareEnhanced.closeTwoFactorSetup() : (document.getElementById('tfa-setup-container').style.display = 'none')">I've Saved the 2FA Information</button>
             </div>
-            <form method="POST" enctype="multipart/form-data" class="form-group" id="upload-form">
-                <!-- Algorithm Selection for PacShare -->
-                <div class="form-group">
-                    <label for="share-algorithm">Encryption Algorithm:</label>
-                    <select id="share-algorithm" name="algorithm">
-                        <!-- Options populated dynamically by JavaScript -->
-                    </select>
-                </div>
-                <input type="file" name="file" id="upload-file" required />
-                <input type="password" name="enc_password" placeholder="Encryption/Decryption Password" required />
-                <input type="password" name="pickup_password" placeholder="Pickup Password" required />
-                
-                <!-- 2FA Option -->
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="enable_2fa" id="enable-2fa" />
-                        Enable 2FA (TOTP) - Adds extra security with Google Authenticator, Authy, etc.
-                    </label>
-                </div>
-                
-                <div class="button-group">
-                    <button type="submit">Upload and Generate Link</button>
-                </div>
-            </form>
             <p style="color: #9c0000;">BOTH PASSWORDS ARE REQUIRED FOR PICKUP</p>
+
             <script>
-                document.getElementById('upload-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.target);
-                    
-                    try {
-                        const response = await fetch('/', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-                        
-                        if (data.error) {
-                            alert(data.error);
-                            return;
-                        }
-                        
-                        if (data.success && data.pickup_url) {
-                            const shareLink = document.getElementById('share-link');
-                            const shareLinkContainer = document.getElementById('share-link-container');
-                            
-                            shareLink.href = data.pickup_url;
-                            shareLink.textContent = data.pickup_url;
-                            shareLinkContainer.style.display = 'flex';
-                            
-                            // If 2FA is enabled, show the QR code immediately
-                            if (data.qr_code_url) {
-                                showTwoFactorSetup(data.qr_code_url, data.service_name, data.totp_secret);
-                            }
-                            
-                            // Clear form fields
-                            document.getElementById('upload-file').value = '';
-                            document.getElementsByName('enc_password')[0].value = '';
-                            document.getElementsByName('pickup_password')[0].value = '';
-                            document.getElementById('enable-2fa').checked = false;
-                            
-                            // Scroll to the share link
-                            shareLinkContainer.scrollIntoView({ behavior: 'smooth' });
-                        }
-                    } catch (error) {
-                        alert('Error uploading file: ' + error.message);
-                    }
-                });
-
-                // 2FA Setup Functions
-                function showTwoFactorSetup(qrCodeUrl, serviceName, totpSecret) {
-                    const container = document.getElementById('tfa-setup-container');
-                    const qrImage = document.getElementById('tfa-qr-image');
-                    const tfaString = document.getElementById('tfa-string');
-                    
-                    qrImage.src = qrCodeUrl;
-                    tfaString.value = totpSecret;
-                    container.style.display = 'block';
-                    
-                    // Scroll to the 2FA setup
-                    container.scrollIntoView({ behavior: 'smooth' });
-                }
-
-                function closeTwoFactorSetup() {
-                    const container = document.getElementById('tfa-setup-container');
-                    container.style.display = 'none';
-                }
-
-                // Copy share link functionality
-                document.getElementById('copy-share-btn').addEventListener('click', () => {
-                    const shareLink = document.getElementById('share-link');
-                    const feedback = document.getElementById('shared-link-feedback');
-                    
-                    navigator.clipboard.writeText(shareLink.href).then(() => {
-                        feedback.style.display = 'block';
-                        feedback.classList.add('show');
-                        
-                        setTimeout(() => {
-                            feedback.classList.remove('show');
-                            setTimeout(() => {
-                                feedback.style.display = 'none';
-                            }, 300);
-                        }, 2000);
-                    });
-                });
-
-                // Copy 2FA string functionality
-                document.getElementById('copy-tfa-string-btn').addEventListener('click', () => {
-                    const tfaString = document.getElementById('tfa-string');
-                    const feedback = document.getElementById('tfa-string-feedback');
-                    
-                    navigator.clipboard.writeText(tfaString.value).then(() => {
-                        feedback.style.display = 'block';
-                        feedback.classList.add('show');
-                        
-                        setTimeout(() => {
-                            feedback.classList.remove('show');
-                            setTimeout(() => {
-                                feedback.style.display = 'none';
-                            }, 300);
-                        }, 2000);
-                    });
-                });
-
                 // Centralized Key Pairs Management
                 let globalKeys = {
                     publicKey: null,
