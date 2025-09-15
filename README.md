@@ -186,7 +186,7 @@ Access the admin panel at `/adminpage` after initial setup at `/admin-setup`.
 
 ## 🛡️ Deployment Tips
 ##### I recommend using Linux as the host server, the follow confs are Linux focused
-The official PacCrypt host is **Debian** minimal install.
+The official PacCrypt host is **Arch** minimal install.
 
 **HTTP** Nginx config (Not recommended):
 
@@ -403,4 +403,5 @@ We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned fe
 MIT © [TySP-Dev](https://github.com/TySP-Dev)
 
 **🔐 Secure by design. Simple by choice. Powerful by nature.**
+
 
