@@ -1,7 +1,8 @@
 <div align="center">
 
-[![Main Repo](https://img.shields.io/badge/Main%20Repo-gits.tysstech.com-blue?logo=git)](https://git.tysstech.com/tyler/PacCrypt-Webapp)
+[![Main Repo](https://img.shields.io/badge/Main%20Repo-gits.tysstech.com-blue?logo=gitea)](https://git.tysstech.com/tyler/PacCrypt-Webapp)
 [![Mirror Repo](https://img.shields.io/badge/Mirror%20Repo-github.com-blue?logo=github)](https://github.com/TySP-Dev/PacCrypt-Webapp)
+[![Official Instance](https://img.shields.io/badge/Mirror%20Repo-github.com-blue?logo=github)](https://paccrypt.tysstech.com)
 
 <div align="left">
 
@@ -17,10 +18,6 @@
 > Next push will contain human oversite on the documentation.
 
 **🌐 Official Instance**: N/A
-
-| Main Repo (Gitea) | Mirror Repo (GitHub) |
-|---|---|
-| https://git.tysstech.com/tyler/PacCrypt-Webapp | https://github.com/TySP-Dev/PacCrypt-Webapp |
 
 ---
 
