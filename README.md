@@ -11,9 +11,8 @@
 
 **🌐 Official Instance**: N/A
 
-**Main Repo**: https://git.tysstech.com/tyler/PacCrypt-Webapp/
-
-**Mirror Repo**: https://github.com/TySP-Dev/PacCrypt-Webapp
+| Main Repo (Gitea) | Mirror Repo (GitHub) |
+| https://git.tysstech.com/tyler/PacCrypt-Webapp | https://github.com/TySP-Dev/PacCrypt-Webapp |
 
 ---
 
