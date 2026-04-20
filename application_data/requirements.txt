@@ -1,0 +1,26 @@
+### **requirements.txt**
+
+# Core Flask stack
+flask
+flask-cors
+waitress
+werkzeug
+
+# Encryption engines
+cryptography
+pycryptodome
+pqcrypto
+
+# Utility
+psutil
+
+# Security and rate limiting
+flask-limiter
+clamd
+ipaddress
+
+# TOTP for 2FA
+pyotp
+qrcode
+
+# Run pip install -r application_data/requirements.txt

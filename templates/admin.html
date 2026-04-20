@@ -1,0 +1,376 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PacCrypt - Admin Panel" />
+    <title>Admin Panel - PacCrypt</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/PacCrypt.png') }}" />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <!-- Scripts -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body class="dark">
+
+    <!-- Header -->
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>ADMIN PANEL</p>
+          </div>
+        </div>
+      </header>  
+
+    <!-- Main Content -->
+    <main>
+        <!-- Site Map Section -->
+        <section id="sitemap-section" class="card form-group">
+            <h2>Server Management</h2>
+            
+            <div class="sitemap-header">
+                <button onclick="toggleSitemap()" style="margin-bottom: 10px;">Show Site Map</button>
+            </div>
+            
+            <div id="sitemap-list" class="sitemap-content" style="display: none;">
+                <ul style="list-style: none; padding-left: 0;">
+                    {% for route in routes %}
+                    <li style="margin-bottom: 5px;"><code>{{ route }}</code></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+<!-- Server Management Buttons -->
+            <div class="admin-button-grid">
+                <button onclick="restartServer()">Restart Server</button>
+                <form action="{{ url_for('admin_logout') }}" method="GET" style="display: inline;">
+                    <button type="submit">Log Out</button>
+                </form>
+                <button onclick="updateServer()">Update Server</button>
+                <form action="{{ url_for('admin_settings') }}" method="GET" style="display: inline;">
+                    <button type="submit">Settings</button>
+                </form>
+                <button onclick="switchToDevMode()" style="background: #0066cc;">Switch to Dev Mode</button>
+                <button onclick="switchToProdMode()" style="background: #cc6600;">Switch to Prod Mode</button>
+                <button onclick="resetAdmin()" class="danger-button">Reset Admin</button>
+                <button onclick="clearUploads()" class="danger-button">Clear PacShare</button>
+            </div>
+  
+
+            <!-- Flash Messages -->
+            <div id="admin-feedback" class="copy-feedback" style="display: none;"></div>
+        </section>
+
+        <!-- Password Change Section -->
+        <section id="password-change-section" class="card form-group">
+            <h2>Change Admin Password</h2>
+
+            <!-- Password Feedback -->
+            {% with messages = get_flashed_messages(with_categories=true, category_filter=['password-feedback']) %}
+            {% for category, message in messages %}
+            <div class="copy-feedback show">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <!-- Password Change Form -->
+            <form method="POST" action="{{ url_for('admin_change_password') }}">
+                <input type="password" name="current_password" placeholder="Current Password" required />
+                <input type="password" name="new_password" placeholder="New Password" required />
+                <button type="submit">Update Password</button>
+            </form>
+        </section>
+
+        <!-- 2FA Management Section -->
+        <section id="2fa-section" class="card form-group">
+            <h2>Two-Factor Authentication (2FA)</h2>
+
+            <!-- 2FA Feedback -->
+            {% with messages = get_flashed_messages(with_categories=true, category_filter=['2fa-feedback']) %}
+            {% for category, message in messages %}
+            <div class="copy-feedback show">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            {% if tfa_enabled %}
+                <!-- 2FA is enabled -->
+                <div class="status-info">
+                    <p style="color: lime;">✅ 2FA is <strong>enabled</strong> for your admin account.</p>
+                    <p>Your account is protected with TOTP-based two-factor authentication.</p>
+                </div>
+
+                <!-- QR Code Display -->
+                <div class="form-group">
+                    <button type="button" onclick="toggleQRCode()" style="margin-bottom: 10px;">Show/Hide QR Code</button>
+                    <div id="qr-code-container" style="display: none; text-align: center;">
+                        <p><strong>Scan this QR code with your authenticator app:</strong></p>
+                        <img src="{{ url_for('admin_qr_code') }}" alt="Admin 2FA QR Code" style="max-width: 200px;" />
+                        <p style="font-size: 0.85em; color: #ccc;">You can re-scan this QR code if you need to set up 2FA on a new device.</p>
+                    </div>
+                </div>
+
+                <!-- Disable 2FA Form -->
+                <div class="form-group">
+                    <form method="POST" action="{{ url_for('admin_disable_2fa') }}">
+                        <input type="text" name="totp_code" placeholder="Enter current 2FA code to disable" pattern="[0-9]{6}" maxlength="6" required />
+                        <button type="submit" class="danger-button">Disable 2FA</button>
+                    </form>
+                </div>
+
+            {% else %}
+                <!-- 2FA is disabled -->
+                <div class="status-info">
+                    <p style="color: #ff6b6b;">🔒 2FA is <strong>disabled</strong> for your admin account.</p>
+                    <p>Enable 2FA for enhanced security using authenticator apps like Google Authenticator, Authy, or Microsoft Authenticator.</p>
+                </div>
+
+                <!-- Enable 2FA -->
+                <div class="form-group">
+                    <form method="POST" action="{{ url_for('admin_enable_2fa') }}">
+                        <button type="submit">Enable 2FA</button>
+                    </form>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Server Status Section -->
+        <section id="server-status-section" class="card form-group">
+            <h2>Server Status</h2>
+            <ul class="status-list">
+                <li>Uptime: <code>{{ server_info.uptime }}</code></li>
+                <li>Server Time: <code>{{ server_info.server_time }}</code></li>
+                <li>Python Version: <code>{{ server_info.python_version }}</code></li>
+                <li>Flask Debug Mode: <code>{{ server_info.debug_mode }}</code></li>
+            </ul>
+        </section>
+
+
+        <!-- Server Logs Section -->
+        <section id="server-logs-section" class="card form-group">
+            <h2>Server Logs</h2>
+            <button onclick="toggleLogs()" style="margin-bottom: 10px;">Show/Hide Logs</button>
+            <div id="logLoader" style="display: none; margin-bottom: 10px;">Loading logs...</div>
+            <pre id="logContainer" style="display: none;"></pre>
+        </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
+        </a>
+        <a href="{{ url_for('sitemap') }}">
+            <img src="\static\img\sitemap.png" alt="Sitemap Png" width="55" />
+        </a>
+    </footer>
+
+    <!-- Log Viewer Script -->
+    <script>
+    async function toggleLogs() {
+        const logContainer = document.getElementById('logContainer');
+        const logLoader = document.getElementById('logLoader');
+        if (logContainer.style.display === 'none') {
+            logLoader.style.display = 'block';
+            const response = await fetch("{{ url_for('admin_logs') }}");
+            const data = await response.json();
+            logLoader.style.display = 'none';
+            logContainer.innerText = data.logs.join('\n');
+            logContainer.style.display = 'block';
+        } else {
+            logContainer.style.display = 'none';
+        }
+    }
+    </script>
+
+    <script>
+    function toggleSitemap() {
+        const list = document.getElementById('sitemap-list');
+        const button = document.querySelector('.sitemap-header button');
+        
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            button.textContent = 'Hide Site Map';
+        } else {
+            list.style.display = 'none';
+            button.textContent = 'Show Site Map';
+        }
+    }
+
+    async function restartServer() {
+        if (!confirm('Are you sure you want to restart the server? This will temporarily disconnect all users.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("restart_server") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                // Add a small delay before redirecting to allow the server to restart
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showFeedback(data.error || 'Failed to restart server.');
+            }
+        } catch (error) {
+            showFeedback('Failed to restart server.');
+        }
+    }
+
+    async function updateServer() {
+        if (!confirm('Are you sure you want to pull the latest changes from GitHub?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_update_server") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+            } else {
+                showFeedback(data.error || 'Failed to update server from GitHub.');
+            }
+        } catch (error) {
+            showFeedback('Failed to update server from GitHub.');
+        }
+    }
+
+    async function resetAdmin() {
+        if (!confirm('Are you sure you want to reset admin credentials?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_reset") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                showFeedback('Admin credentials reset. Please create new credentials.');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("admin_setup") }}';
+                }, 2000);
+            }
+        } catch (error) {
+            showFeedback('Failed to reset admin credentials.');
+        }
+    }
+
+    async function clearUploads() {
+        if (!confirm('Are you sure you want to delete ALL uploaded files?')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_clear_uploads") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                showFeedback('All uploaded files have been cleared.');
+            }
+        } catch (error) {
+            showFeedback('Failed to clear uploaded files.');
+        }
+    }
+
+    async function switchToDevMode() {
+        if (!confirm('Are you sure you want to switch to Development mode? This will restart the server.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_switch_dev_mode") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                showFeedback(data.error || 'Failed to switch to dev mode.');
+            }
+        } catch (error) {
+            showFeedback('Failed to switch to dev mode.');
+        }
+    }
+
+    async function switchToProdMode() {
+        if (!confirm('Are you sure you want to switch to Production mode? This will restart the server.')) return;
+        
+        try {
+            const response = await fetch('{{ url_for("admin_switch_prod_mode") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showFeedback(data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                showFeedback(data.error || 'Failed to switch to prod mode.');
+            }
+        } catch (error) {
+            showFeedback('Failed to switch to prod mode.');
+        }
+    }
+
+    function showFeedback(message) {
+        const feedback = document.getElementById('admin-feedback');
+        feedback.textContent = message;
+        feedback.style.display = 'block';
+        feedback.classList.add('show');
+        
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+
+    function toggleQRCode() {
+        const container = document.getElementById('qr-code-container');
+        const button = document.querySelector('button[onclick="toggleQRCode()"]');
+        
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            button.textContent = 'Hide QR Code';
+        } else {
+            container.style.display = 'none';
+            button.textContent = 'Show QR Code';
+        }
+    }
+    </script>
+</body>
+</html>

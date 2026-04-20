@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PacCrypt - Secure file pickup and decryption" />
+    <title>PacCrypt - Secure File Pickup</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='img/PacCrypt.png') }}" type="image/png" />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body class="dark">
+    <!-- Header -->
+    <header class="card logo-header">
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='img/PacCrypt.png') }}" alt="PacCrypt Logo" />
+          <div class="logo-text">
+            <h1>PACCRYPT</h1>
+            <p>Encrypted File Pickup</p>
+          </div>
+        </div>
+      </header>  
+
+    <!-- Main Content -->
+    <main>
+        <!-- File Pickup Section -->
+        <section id="pickup-section" class="card form-group">
+            <h2>File Pickup</h2>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul style="color: lime; list-style: none; padding-left: 0;">
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+
+            <!-- File Info -->
+            <div class="form-group">
+                <p style="color: #00ff99; margin-bottom: 15px;">File ID: <code>{{ file_id }}</code></p>
+                {% if require_2fa %}
+                <p style="color: #ffaa00; margin-bottom: 15px;">🔒 This file requires 2FA (TOTP) authentication.</p>
+                {% endif %}
+            </div>
+
+            {% if require_2fa %}
+            <div class="form-group" style="border: 2px solid #ffaa00; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="color: #ffaa00; margin-top: 0;">⚠️ 2FA Required</h3>
+                <p style="color: #ccc;">
+                    <strong>You should have already set up 2FA when uploading this file.</strong><br>
+                    Enter the 6-digit code from your authenticator app below.
+                </p>
+                <p style="color: #ff6b6b; font-size: 0.9em;">
+                    If you didn't set up 2FA during upload, you won't be able to access this file.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Pickup Form -->
+            <form method="POST" class="form-group">
+                <div class="form-group">
+                    <input type="password" 
+                           name="pickup_password" 
+                           placeholder="Pickup Password" 
+                           required 
+                           autocomplete="off" />
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" 
+                           name="enc_password" 
+                           placeholder="Encryption Password" 
+                           required 
+                           autocomplete="off" />
+                </div>
+
+                {% if require_2fa %}
+                <div class="form-group">
+                    <input type="text" 
+                           name="totp_code" 
+                           placeholder="6-Digit Authenticator Code" 
+                           required 
+                           maxlength="6" 
+                           pattern="[0-9]{6}"
+                           autocomplete="off"
+                           style="text-align: center; font-size: 1.2em; letter-spacing: 0.2em;" />
+                </div>
+                {% endif %}
+
+                <div class="button-group">
+                    <button type="submit">Decrypt and Download</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Security Notice Section -->
+        <section id="security-notice-section" class="card form-group">
+            <h2>Security Notice</h2>
+            <p style="color: #00ff99; text-align: center;">
+                Make sure you're on the correct domain before entering any passwords.<br>
+                Your file will be permanently deleted after download.
+            </p>
+        </section>
+
+        <!-- Link ID Section -->
+        <section id="link-id-section" class="card form-group">
+            <p style="color: #00ff99; text-align: center; font-family: monospace; font-size: 1.1em;">
+                Link ID: <code>{{ file_id }}</code>
+            </p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UnNaturalll-Dev. All rights reserved.</p>
+        <a href="https://github.com/TySP-Dev" target="_blank" id="github-link">
+            <img src="\static\img\Github_logo.png" alt="GitHub Logo" width="100" />
+        </a>
+    </footer>
+</body>
+</html>
