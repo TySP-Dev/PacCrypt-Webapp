@@ -1,6 +1,7 @@
 # PacCrypt
 
 > [!IMPORTANT]
+> Dev branch pushed to main, in this state it works but has its issues
 > PacCrypt is still in the beginning stages of development.
 > PacCrypt has not been examined for vulnerabilities yet.
 > Due to this, PacCrypt and PacShare are not recommended for PII or sensitive information.
