@@ -2,6 +2,9 @@
 
 **PacCrypt** is a modern, secure web application for encrypting and decrypting text and files using multiple encryption algorithms. Built with Flask and featuring a comprehensive REST API, modular encryption engines, and advanced security features including 2FA support.
 
+> [!WARNING]
+> Merged Dev branch into main, program is still in the development stage so no need to have multiple branches. Please submit issues for bugs. I expect a lot, I dont recall the state of the Dev branch.
+
 > [!IMPORTANT]
 > This document contains AI generated pieces that have not been reviewed yet.
 > Next push will contain human oversite on the documentation.
