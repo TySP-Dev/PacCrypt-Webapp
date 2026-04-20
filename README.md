@@ -9,7 +9,7 @@
 > This document contains AI generated pieces that have not been reviewed yet.
 > Next push will contain human oversite on the documentation.
 
-**🌐 Official Instance**: [paccrypt.unnaturalll.dev](https://paccrypt.unnaturalll.dev)
+**🌐 Official Instance**: N/A
 
 ---
 
@@ -397,7 +397,8 @@ We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned fe
 - **Documentation**: See [API.md](API.md) for API details
 - **Issues**: Report bugs via GitHub Issues
 - **Discussions**: Use GitHub Discussions for questions
-- **Official Instance**: [paccrypt.unnaturalll.dev](https://paccrypt.unnaturalll.dev)
+- **Element/Matrix Chat**: 
+- **Official Instance**: N/A
 
 ---
 
