@@ -2,7 +2,7 @@
 
 [![Main Repo](https://img.shields.io/badge/Main%20Repo-gits.tysstech.com-blue?logo=gitea)](https://git.tysstech.com/tyler/PacCrypt-Webapp)
 [![Mirror Repo](https://img.shields.io/badge/Mirror%20Repo-github.com-blue?logo=github)](https://github.com/TySP-Dev/PacCrypt-Webapp)
-[![Official Instance](https://img.shields.io/badge/Official%20Instance-Open%20Source-blue?style=for-the-badge)](https://paccrypt.tysstech.com)
+[![Official Instance](https://img.shields.io/badge/Official%20Instance-PacCrypt-blue?style=for-the-badge)](https://paccrypt.tysstech.com)
 
 <div align="left">
 
