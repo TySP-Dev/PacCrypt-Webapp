@@ -17,8 +17,6 @@
 > This document contains AI generated pieces that have not been reviewed yet.
 > Next push will contain human oversite on the documentation.
 
-**🌐 Official Instance**: N/A
-
 ---
 
 ## ✨ Features
