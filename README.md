@@ -1,4 +1,7 @@
-[![Badge](https://img.shields.io/badge/Type-Primary-blue)](#)
+[![Main Repo](https://img.shields.io/badge/Main%20Repo-gits.tysstech.com-blue?logo=git)](https://git.tysstech.com/tyler/PacCrypt-Webapp)
+[![Mirror Repo](https://img.shields.io/badge/Mirror%20Repo-github.com-blue?logo=github)](https://github.com/TySP-Dev/PacCrypt-Webapp)
+
+<div align="center">
 # PacCrypt 🔐
 
 **PacCrypt** is a modern, secure web application for encrypting and decrypting text and files using multiple encryption algorithms. Built with Flask and featuring a comprehensive REST API, modular encryption engines, and advanced security features including 2FA support.
