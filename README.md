@@ -1,3 +1,4 @@
+[![Badge](https://img.shields.io/badge/Type-Primary-blue)](#)
 # PacCrypt 🔐
 
 **PacCrypt** is a modern, secure web application for encrypting and decrypting text and files using multiple encryption algorithms. Built with Flask and featuring a comprehensive REST API, modular encryption engines, and advanced security features including 2FA support.
