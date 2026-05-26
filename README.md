@@ -1,3 +1,6 @@
+> [!WARNING]
+> PacCrypt is currently maintenance only, please submit issues with bug, although only major ones will be addressed right now. Development will continue in the future.
+
 <div align="center">
 
 [![Main Repo](https://img.shields.io/badge/Main%20Repo-git.tysstech.com-blue?logo=gitea)](https://git.tysstech.com/TySS-Dev/PacCrypt-Webapp)
