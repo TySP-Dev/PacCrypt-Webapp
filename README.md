@@ -411,6 +411,7 @@ We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned fe
 ## 📄 License
 
 MIT
+
 **🔐 Secure by design. Simple by choice. Powerful by nature.**
 
 
