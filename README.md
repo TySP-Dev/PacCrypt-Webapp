@@ -1,5 +1,5 @@
 > [!WARNING]
-> PacCrypt is currently maintenance only, please submit issues with bug, although only major ones will be addressed right now. Development will continue in the future.
+> PacCrypt is currently maintenance only, please submit issues for bugs. Only major bugs will be addressed right now. Development will continue in the future.
 
 <div align="center">
 
