@@ -410,8 +410,7 @@ We welcome contributions! Please see our [ROADMAP.md](ROADMAP.md) for planned fe
 
 ## 📄 License
 
-MIT © [TySP-Dev](https://github.com/TySP-Dev)
-
+MIT
 **🔐 Secure by design. Simple by choice. Powerful by nature.**
 
 
